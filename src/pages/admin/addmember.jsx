@@ -991,6 +991,7 @@ const Addmember = () => {
       documents: member.documents || [],
     });
     setProfilePicPreview(member.photo || "");
+    setCurrentStep(1);
     setIsDrawerOpen(true);
   };
 
@@ -4766,23 +4767,6 @@ const Addmember = () => {
                       </p>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">
-                        <Calendar className="w-4 h-4 inline mr-2" />
-                        Due Date (Optional)
-                      </label>
-                      <input
-                        type="date"
-                        name="dueDate"
-                        value={formData.dueDate || ""}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                      />
-                      <p className="text-xs text-gray-400 mt-1">
-                        Optional: a due date associated with the member
-                      </p>
-                    </div>
-
                     {/* Profile Picture Upload */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-300 mb-2">
@@ -4807,12 +4791,26 @@ const Addmember = () => {
                             className="hidden"
                             id="profile-pic-upload"
                           />
-                          <label
-                            htmlFor="profile-pic-upload"
-                            className="cursor-pointer px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors inline-block"
-                          >
-                            Choose Image
-                          </label>
+                          <div className="flex gap-2 items-center">
+                            <label
+                              htmlFor="profile-pic-upload"
+                              className="cursor-pointer px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors inline-block"
+                            >
+                              Choose Image
+                            </label>
+                            {profilePicPreview && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setProfilePicFile(null);
+                                  setProfilePicPreview("");
+                                }}
+                                className="px-4 py-2 bg-red-900 text-white rounded-lg hover:bg-red-800 transition-colors"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-400 mt-2">
                             Max size: 5MB. Formats: JPG, PNG
                           </p>
@@ -4834,12 +4832,23 @@ const Addmember = () => {
                         className="hidden"
                         id="document-upload"
                       />
-                      <label
-                        htmlFor="document-upload"
-                        className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
-                      >
-                        Upload Documents
-                      </label>
+                      <div className="flex gap-2 items-center">
+                        <label
+                          htmlFor="document-upload"
+                          className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
+                        >
+                          Upload Documents
+                        </label>
+                        {documentFiles.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setDocumentFiles([])}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-400 mt-2">
                         Max size: 10MB per file. Formats: PDF, DOC, DOCX, JPG,
                         PNG
@@ -5369,6 +5378,23 @@ const Addmember = () => {
                           <option value="Net Banking">Net Banking</option>
                         </select>
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">
+                        <Calendar className="w-4 h-4 inline mr-2" />
+                        Due Date (Optional)
+                      </label>
+                      <input
+                        type="date"
+                        name="dueDate"
+                        value={formData.dueDate || ""}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Optional: a due date associated with the member
+                      </p>
                     </div>
 
                     <div>
