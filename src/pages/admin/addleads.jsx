@@ -1,6 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { X, User, Mail, Phone, Calendar, MessageSquare, Tag, AlertCircle, Clock, CheckCircle, XCircle, Edit, Trash2, Plus, PhoneCall, Send, Eye, History } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  X,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  MessageSquare,
+  Tag,
+  AlertCircle,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Edit,
+  Trash2,
+  Plus,
+  PhoneCall,
+  Send,
+  Eye,
+  History,
+} from "lucide-react";
 import {
   fetchAllLeads,
   createLead,
@@ -11,11 +30,12 @@ import {
   fetchLeadStatistics,
   clearError,
   clearSuccess,
-} from '../../store/admin/leads-slice';
+} from "../../store/admin/leads-slice";
 
 const GymLeadsTracking = () => {
   const dispatch = useDispatch();
-  const { leads, statistics, isLoading, error, success, message, pagination } = useSelector((state) => state.leads);
+  const { leads, statistics, isLoading, error, success, message, pagination } =
+    useSelector((state) => state.leads);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFollowUpOpen, setIsFollowUpOpen] = useState(false);
@@ -23,45 +43,47 @@ const GymLeadsTracking = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [currentLeadId, setCurrentLeadId] = useState(null);
-  const [followUpNote, setFollowUpNote] = useState('');
-  const [followUpDate, setFollowUpDate] = useState('');
-  const [followUpMethod, setFollowUpMethod] = useState('Phone');
-  const [followUpOutcome, setFollowUpOutcome] = useState('No Response');
-  const [nextFollowUpDate, setNextFollowUpDate] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
-  
+  const [followUpNote, setFollowUpNote] = useState("");
+  const [followUpDate, setFollowUpDate] = useState("");
+  const [followUpMethod, setFollowUpMethod] = useState("Phone");
+  const [followUpOutcome, setFollowUpOutcome] = useState("No Response");
+  const [nextFollowUpDate, setNextFollowUpDate] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phoneNumber: '',
-    leadSource: 'Walk-in',
-    interestedPackage: 'Not Decided',
-    budgetRange: 'Not Disclosed',
-    contactMethod: 'Phone',
-    notes: '',
-    leadStatus: 'New',
-    nextFollowUpDate: '',
-    leadPriority: 'Medium',
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    leadSource: "Walk-in",
+    interestedPackage: "Not Decided",
+    budgetRange: "Not Disclosed",
+    contactMethod: "Phone",
+    notes: "",
+    leadStatus: "New",
+    nextFollowUpDate: "",
+    leadPriority: "Medium",
   });
 
   // Fetch leads and statistics on component mount
   useEffect(() => {
-    dispatch(fetchAllLeads({ page: 1, limit: 50 }));
+    dispatch(fetchAllLeads({ page: 1, limit: itemsPerPage }));
     dispatch(fetchLeadStatistics());
-  }, [dispatch]);
+  }, [dispatch, itemsPerPage]);
 
   // Handle success/error messages
   useEffect(() => {
     if (success) {
-      alert(message || 'Operation successful!');
+      alert(message || "Operation successful!");
       dispatch(clearSuccess());
       setIsDrawerOpen(false);
       setIsFollowUpOpen(false);
       resetForm();
-      dispatch(fetchAllLeads({ page: 1, limit: 50 }));
+      dispatch(fetchAllLeads({ page: currentPage, limit: itemsPerPage }));
       dispatch(fetchLeadStatistics());
     }
-  }, [success, message, dispatch]);
+  }, [success, message, dispatch, currentPage, itemsPerPage]);
 
   useEffect(() => {
     if (error) {
@@ -72,17 +94,17 @@ const GymLeadsTracking = () => {
 
   const resetForm = () => {
     setFormData({
-      fullName: '',
-      email: '',
-      phoneNumber: '',
-      leadSource: 'Walk-in',
-      interestedPackage: 'Not Decided',
-      budgetRange: 'Not Disclosed',
-      contactMethod: 'Phone',
-      notes: '',
-      leadStatus: 'New',
-      nextFollowUpDate: '',
-      leadPriority: 'Medium',
+      fullName: "",
+      email: "",
+      phoneNumber: "",
+      leadSource: "Walk-in",
+      interestedPackage: "Not Decided",
+      budgetRange: "Not Disclosed",
+      contactMethod: "Phone",
+      notes: "",
+      leadStatus: "New",
+      nextFollowUpDate: "",
+      leadPriority: "Medium",
     });
     setEditMode(false);
     setCurrentLeadId(null);
@@ -90,15 +112,15 @@ const GymLeadsTracking = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = () => {
     if (!formData.fullName || !formData.phoneNumber || !formData.email) {
-      alert('Please fill in required fields: Name, Email, and Phone');
+      alert("Please fill in required fields: Name, Email, and Phone");
       return;
     }
 
@@ -126,16 +148,18 @@ const GymLeadsTracking = () => {
       interestedPackage: lead.interestedPackage,
       budgetRange: lead.budgetRange,
       contactMethod: lead.contactMethod,
-      notes: lead.notes || '',
+      notes: lead.notes || "",
       leadStatus: lead.leadStatus,
-      nextFollowUpDate: lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toISOString().split('T')[0] : '',
+      nextFollowUpDate: lead.nextFollowUpDate
+        ? new Date(lead.nextFollowUpDate).toISOString().split("T")[0]
+        : "",
       leadPriority: lead.leadPriority,
     });
     setIsDrawerOpen(true);
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this lead?')) {
+    if (window.confirm("Are you sure you want to delete this lead?")) {
       dispatch(deleteLead(id));
     }
   };
@@ -143,11 +167,11 @@ const GymLeadsTracking = () => {
   const openFollowUp = (lead) => {
     setSelectedLead(lead);
     setIsFollowUpOpen(true);
-    setFollowUpNote('');
-    setFollowUpDate(new Date().toISOString().split('T')[0]);
-    setFollowUpMethod('Phone');
-    setFollowUpOutcome('No Response');
-    setNextFollowUpDate('');
+    setFollowUpNote("");
+    setFollowUpDate(new Date().toISOString().split("T")[0]);
+    setFollowUpMethod("Phone");
+    setFollowUpOutcome("No Response");
+    setNextFollowUpDate("");
   };
 
   const openDetail = (lead) => {
@@ -157,7 +181,7 @@ const GymLeadsTracking = () => {
 
   const handleAddFollowUp = () => {
     if (!followUpNote.trim() || !selectedLead) {
-      alert('Please enter follow-up notes');
+      alert("Please enter follow-up notes");
       return;
     }
 
@@ -176,76 +200,160 @@ const GymLeadsTracking = () => {
     dispatch(updateLeadStatus({ id, status: newStatus }));
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    dispatch(fetchAllLeads({ page, limit: itemsPerPage }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleItemsPerPageChange = (newLimit) => {
+    setItemsPerPage(newLimit);
+    setCurrentPage(1);
+    dispatch(fetchAllLeads({ page: 1, limit: newLimit }));
+  };
+
+  const calculateTotalPages = () => {
+    return Math.ceil((pagination?.total || 0) / itemsPerPage);
+  };
+
+  const getPaginationPages = () => {
+    const totalPages = calculateTotalPages();
+    const pages = [];
+    const maxPages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
+    let endPage = Math.min(totalPages, startPage + maxPages - 1);
+
+    if (endPage - startPage < maxPages - 1) {
+      startPage = Math.max(1, endPage - maxPages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
+
+  // Generate 100 fake leads
+
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
-    if (filter === 'all') {
+    if (filter === "all") {
       dispatch(fetchAllLeads({ page: 1, limit: 50 }));
-    } else if (filter === 'today') {
-      const today = new Date().toISOString().split('T')[0];
-      dispatch(fetchAllLeads({ 
-        page: 1, 
-        limit: 50,
-        // Filter will be handled on backend for today's follow-ups
-      }));
+    } else if (filter === "today") {
+      const today = new Date().toISOString().split("T")[0];
+      dispatch(
+        fetchAllLeads({
+          page: 1,
+          limit: 50,
+          // Filter will be handled on backend for today's follow-ups
+        }),
+      );
     } else {
-      dispatch(fetchAllLeads({ 
-        page: 1, 
-        limit: 50, 
-        status: filter 
-      }));
+      dispatch(
+        fetchAllLeads({
+          page: 1,
+          limit: 50,
+          status: filter,
+        }),
+      );
     }
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'Hot': return 'bg-red-600/20 text-red-400 border-red-500/30';
-      case 'Warm': return 'bg-orange-600/20 text-orange-400 border-orange-500/30';
-      case 'Cold': return 'bg-blue-600/20 text-blue-400 border-blue-500/30';
-      case 'Converted': return 'bg-green-600/20 text-green-400 border-green-500/30';
-      case 'Lost': return 'bg-gray-600/20 text-gray-400 border-gray-500/30';
-      case 'New': return 'bg-purple-600/20 text-purple-400 border-purple-500/30';
-      default: return 'bg-purple-600/20 text-purple-400 border-purple-500/30';
+    switch (status) {
+      case "Hot":
+        return "bg-red-600/20 text-red-400 border-red-500/30";
+      case "Warm":
+        return "bg-orange-600/20 text-orange-400 border-orange-500/30";
+      case "Cold":
+        return "bg-blue-600/20 text-blue-400 border-blue-500/30";
+      case "Converted":
+        return "bg-green-600/20 text-green-400 border-green-500/30";
+      case "Lost":
+        return "bg-gray-600/20 text-gray-400 border-gray-500/30";
+      case "New":
+        return "bg-purple-600/20 text-purple-400 border-purple-500/30";
+      default:
+        return "bg-purple-600/20 text-purple-400 border-purple-500/30";
     }
   };
 
   const getSourceIcon = (source) => {
-    switch(source) {
-      case 'Walk-in': return '🚶';
-      case 'Instagram': return '📸';
-      case 'Facebook': return '👥';
-      case 'Google': return '🔍';
-      case 'Google Ads': return '🔍';
-      case 'Referral': return '🤝';
-      case 'Website': return '🌐';
-      case 'WhatsApp': return '💬';
-      default: return '📱';
+    switch (source) {
+      case "Walk-in":
+        return "🚶";
+      case "Instagram":
+        return "📸";
+      case "Facebook":
+        return "👥";
+      case "Google":
+        return "🔍";
+      case "Google Ads":
+        return "🔍";
+      case "Referral":
+        return "🤝";
+      case "Website":
+        return "🌐";
+      case "WhatsApp":
+        return "💬";
+      default:
+        return "📱";
     }
   };
 
   const getFollowUpIcon = (method) => {
-    switch(method) {
-      case 'Phone': return <PhoneCall className="w-4 h-4" />;
-      case 'Email': return <Mail className="w-4 h-4" />;
-      case 'In-Person': return <Calendar className="w-4 h-4" />;
-      case 'WhatsApp': return <MessageSquare className="w-4 h-4" />;
-      default: return <MessageSquare className="w-4 h-4" />;
+    switch (method) {
+      case "Phone":
+        return <PhoneCall className="w-4 h-4" />;
+      case "Email":
+        return <Mail className="w-4 h-4" />;
+      case "In-Person":
+        return <Calendar className="w-4 h-4" />;
+      case "WhatsApp":
+        return <MessageSquare className="w-4 h-4" />;
+      default:
+        return <MessageSquare className="w-4 h-4" />;
     }
   };
 
-  const filteredLeads = activeFilter === 'today' 
-    ? leads.filter(lead => {
-        if (!lead.nextFollowUpDate) return false;
-        const followUpDate = new Date(lead.nextFollowUpDate).toISOString().split('T')[0];
-        const today = new Date().toISOString().split('T')[0];
-        return followUpDate === today;
-      })
-    : leads;
+  const filteredLeads =
+    activeFilter === "today"
+      ? leads.filter((lead) => {
+          if (!lead.nextFollowUpDate) return false;
+          const followUpDate = new Date(lead.nextFollowUpDate)
+            .toISOString()
+            .split("T")[0];
+          const today = new Date().toISOString().split("T")[0];
+          return followUpDate === today;
+        })
+      : leads;
 
   const stats = [
-    { label: 'Total Leads', value: statistics.totalLeads || leads.length, color: 'from-red-600 to-red-700' },
-    { label: 'Hot Leads', value: statistics.hotLeads || leads.filter(l => l.leadStatus === 'Hot').length, color: 'from-orange-600 to-red-600' },
-    { label: 'Converted', value: statistics.convertedLeads || leads.filter(l => l.leadStatus === 'Converted').length, color: 'from-green-600 to-green-700' },
-    { label: 'Follow-ups Today', value: statistics.todaysFollowUps || 0, color: 'from-blue-600 to-blue-700' }
+    {
+      label: "Total Leads",
+      value: statistics.totalLeads || leads.length,
+      color: "from-red-600 to-red-700",
+    },
+    {
+      label: "Hot Leads",
+      value:
+        statistics.hotLeads ||
+        leads.filter((l) => l.leadStatus === "Hot").length,
+      color: "from-orange-600 to-red-600",
+    },
+    {
+      label: "Converted",
+      value:
+        statistics.convertedLeads ||
+        leads.filter((l) => l.leadStatus === "Converted").length,
+      color: "from-green-600 to-green-700",
+    },
+    {
+      label: "Follow-ups Today",
+      value: statistics.todaysFollowUps || 0,
+      color: "from-blue-600 to-blue-700",
+    },
   ];
 
   return (
@@ -254,26 +362,37 @@ const GymLeadsTracking = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Lead Tracking</h1>
-            <p className="text-gray-400 text-sm">Manage potential members and follow-ups</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              Lead Tracking
+            </h1>
+            <p className="text-gray-400 text-sm">
+              Manage potential members and follow-ups
+            </p>
           </div>
-          <button
-            onClick={() => {
-              resetForm();
-              setIsDrawerOpen(true);
-            }}
-            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-red-500/50 transition-all duration-300 flex items-center justify-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Add Lead
-          </button>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                resetForm();
+                setIsDrawerOpen(true);
+              }}
+              className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-red-500/50 transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add Lead
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {stats.map((stat, idx) => (
-            <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg">
-              <div className={`inline-block px-3 py-1 rounded-lg bg-gradient-to-r ${stat.color} text-white text-sm font-semibold mb-3`}>
+            <div
+              key={idx}
+              className="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg"
+            >
+              <div
+                className={`inline-block px-3 py-1 rounded-lg bg-gradient-to-r ${stat.color} text-white text-sm font-semibold mb-3`}
+              >
                 {stat.label}
               </div>
               <p className="text-3xl font-bold text-white">{stat.value}</p>
@@ -284,62 +403,62 @@ const GymLeadsTracking = () => {
         {/* Filter Tabs */}
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
           <div className="flex flex-wrap gap-2">
-            <button 
-              onClick={() => handleFilterChange('all')}
+            <button
+              onClick={() => handleFilterChange("all")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === 'all' 
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                activeFilter === "all"
+                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
               All Leads
             </button>
-            <button 
-              onClick={() => handleFilterChange('New')}
+            <button
+              onClick={() => handleFilterChange("New")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === 'New' 
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                activeFilter === "New"
+                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
               New
             </button>
-            <button 
-              onClick={() => handleFilterChange('Hot')}
+            <button
+              onClick={() => handleFilterChange("Hot")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === 'Hot' 
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                activeFilter === "Hot"
+                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
               Hot
             </button>
-            <button 
-              onClick={() => handleFilterChange('Warm')}
+            <button
+              onClick={() => handleFilterChange("Warm")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === 'Warm' 
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                activeFilter === "Warm"
+                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
               Warm
             </button>
-            <button 
-              onClick={() => handleFilterChange('Cold')}
+            <button
+              onClick={() => handleFilterChange("Cold")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === 'Cold' 
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                activeFilter === "Cold"
+                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
               Cold
             </button>
-            <button 
-              onClick={() => handleFilterChange('today')}
+            <button
+              onClick={() => handleFilterChange("today")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === 'today' 
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                activeFilter === "today"
+                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
               Follow-up Today
@@ -351,9 +470,11 @@ const GymLeadsTracking = () => {
         <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg overflow-hidden">
           <div className="p-6 border-b border-gray-700">
             <h2 className="text-xl font-bold text-white">
-              {activeFilter === 'all' ? 'All Leads' : 
-               activeFilter === 'today' ? 'Follow-ups Today' : 
-               `${activeFilter} Leads`}
+              {activeFilter === "all"
+                ? "All Leads"
+                : activeFilter === "today"
+                  ? "Follow-ups Today"
+                  : `${activeFilter} Leads`}
             </h2>
           </div>
 
@@ -372,35 +493,61 @@ const GymLeadsTracking = () => {
               <table className="w-full">
                 <thead className="bg-gray-700/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Lead Info</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Contact</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Source</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Interest</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Budget</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Follow-up</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Lead Info
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Contact
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Source
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Interest
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Budget
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Follow-up
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {filteredLeads.map((lead) => (
-                    <tr key={lead._id} className="hover:bg-gray-700/30 transition-colors">
+                    <tr
+                      key={lead._id}
+                      className="hover:bg-gray-700/30 transition-colors"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center text-white font-semibold">
                             {lead.fullName.charAt(0)}
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-white">{lead.fullName}</div>
+                            <div className="text-sm font-medium text-white">
+                              {lead.fullName}
+                            </div>
                             <div className="text-xs text-gray-500">
-                              Added: {new Date(lead.addedDate).toLocaleDateString()}
+                              Added:{" "}
+                              {new Date(lead.addedDate).toLocaleDateString()}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-300">{lead.email}</div>
-                        <div className="text-xs text-gray-500">{lead.phoneNumber}</div>
+                        <div className="text-sm text-gray-300">
+                          {lead.email}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {lead.phoneNumber}
+                        </div>
                         <div className="text-xs text-gray-500 mt-1">
                           <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-700 text-gray-300">
                             {lead.contactMethod}
@@ -409,26 +556,38 @@ const GymLeadsTracking = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-lg">{getSourceIcon(lead.leadSource)}</span>
-                          <span className="text-sm text-gray-300">{lead.leadSource}</span>
+                          <span className="text-lg">
+                            {getSourceIcon(lead.leadSource)}
+                          </span>
+                          <span className="text-sm text-gray-300">
+                            {lead.leadSource}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          lead.interestedPackage === 'VIP' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' :
-                          lead.interestedPackage === 'Premium' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white' :
-                          'bg-gradient-to-r from-gray-600 to-gray-700 text-white'
-                        }`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            lead.interestedPackage === "VIP"
+                              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                              : lead.interestedPackage === "Premium"
+                                ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                                : "bg-gradient-to-r from-gray-600 to-gray-700 text-white"
+                          }`}
+                        >
                           {lead.interestedPackage}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-semibold text-white">{lead.budgetRange}</div>
+                        <div className="text-sm font-semibold text-white">
+                          {lead.budgetRange}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <select
                           value={lead.leadStatus}
-                          onChange={(e) => handleStatusChange(lead._id, e.target.value)}
+                          onChange={(e) =>
+                            handleStatusChange(lead._id, e.target.value)
+                          }
                           className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getStatusColor(lead.leadStatus)} bg-transparent cursor-pointer`}
                         >
                           <option value="New">New</option>
@@ -446,44 +605,53 @@ const GymLeadsTracking = () => {
                       </td>
                       <td className="px-6 py-4">
                         {lead.nextFollowUpDate ? (
-                          <div className={`text-sm ${
-                            new Date(lead.nextFollowUpDate).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
-                              ? 'text-red-400 font-semibold' 
-                              : new Date(lead.nextFollowUpDate) < new Date()
-                              ? 'text-orange-400'
-                              : 'text-gray-300'
-                          }`}>
+                          <div
+                            className={`text-sm ${
+                              new Date(lead.nextFollowUpDate)
+                                .toISOString()
+                                .split("T")[0] ===
+                              new Date().toISOString().split("T")[0]
+                                ? "text-red-400 font-semibold"
+                                : new Date(lead.nextFollowUpDate) < new Date()
+                                  ? "text-orange-400"
+                                  : "text-gray-300"
+                            }`}
+                          >
                             <Calendar className="w-4 h-4 inline mr-1" />
-                            {new Date(lead.nextFollowUpDate).toLocaleDateString()}
+                            {new Date(
+                              lead.nextFollowUpDate,
+                            ).toLocaleDateString()}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-500">No follow-up</span>
+                          <span className="text-xs text-gray-500">
+                            No follow-up
+                          </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <button 
+                          <button
                             onClick={() => openFollowUp(lead)}
                             className="p-2 hover:bg-blue-900/30 rounded-lg transition-colors"
                             title="Add Follow-up"
                           >
                             <MessageSquare className="w-4 h-4 text-blue-400 hover:text-blue-300" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => openDetail(lead)}
-                            className="p-2 hover:bg-gray-700 rounded-lg transition-colors" 
+                            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4 text-gray-400 hover:text-white" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleEdit(lead)}
                             className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4 text-gray-400 hover:text-white" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDelete(lead._id)}
                             className="p-2 hover:bg-red-900/30 rounded-lg transition-colors"
                             title="Delete"
@@ -498,24 +666,118 @@ const GymLeadsTracking = () => {
               </table>
             </div>
           )}
+
+          {/* Pagination Section */}
+          {!isLoading && filteredLeads.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 bg-gray-700/30 rounded-lg">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-400">Items per page:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) =>
+                    handleItemsPerPageChange(parseInt(e.target.value))
+                  }
+                  className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-medium hover:bg-gray-600 transition-colors"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span className="text-xs text-gray-500">
+                  {pagination?.total || 0} total leads
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                  className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-medium hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  ← Previous
+                </button>
+
+                <div className="flex gap-1">
+                  {currentPage > 2 && (
+                    <>
+                      <button
+                        onClick={() => handlePageChange(1)}
+                        className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-medium hover:bg-gray-600 transition-colors"
+                      >
+                        1
+                      </button>
+                      {currentPage > 3 && (
+                        <span className="px-2 py-2 text-gray-400">...</span>
+                      )}
+                    </>
+                  )}
+
+                  {getPaginationPages().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === page
+                          ? "bg-red-600 border border-red-500 text-white"
+                          : "bg-gray-700 border border-gray-600 text-white hover:bg-gray-600"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  {currentPage < calculateTotalPages() - 1 && (
+                    <>
+                      {currentPage < calculateTotalPages() - 2 && (
+                        <span className="px-2 py-2 text-gray-400">...</span>
+                      )}
+                      <button
+                        onClick={() => handlePageChange(calculateTotalPages())}
+                        className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-medium hover:bg-gray-600 transition-colors"
+                      >
+                        {calculateTotalPages()}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= calculateTotalPages() || isLoading}
+                  className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-medium hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next →
+                </button>
+              </div>
+
+              <span className="text-sm text-gray-400">
+                Page {currentPage} of {calculateTotalPages()}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Add/Edit Lead Drawer */}
-      <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div 
+      <div
+        className={`fixed inset-0 z-50 transition-opacity duration-300 ${isDrawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      >
+        <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setIsDrawerOpen(false)}
         />
-        
-        <div className={`absolute right-0 top-0 h-full w-full sm:w-[500px] bg-gray-800 border-l border-gray-700 shadow-2xl transition-transform duration-300 overflow-y-auto ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+
+        <div
+          className={`absolute right-0 top-0 h-full w-full sm:w-[500px] bg-gray-800 border-l border-gray-700 shadow-2xl transition-transform duration-300 overflow-y-auto ${isDrawerOpen ? "translate-x-0" : "translate-x-full"}`}
+        >
           <div className="h-full flex flex-col">
             <div className="p-6 border-b border-gray-700 bg-gradient-to-r from-red-600 to-red-700 sticky top-0 z-10">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">
-                  {editMode ? 'Edit Lead' : 'Add New Lead'}
+                  {editMode ? "Edit Lead" : "Add New Lead"}
                 </h2>
-                <button 
+                <button
                   onClick={() => setIsDrawerOpen(false)}
                   className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                 >
@@ -623,12 +885,12 @@ const GymLeadsTracking = () => {
                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="Not Disclosed">Not Disclosed</option>
-                  <option value="Under $500">Under $500</option>
-                  <option value="$500-$800">$500-$800</option>
-                  <option value="$800-$1000">$800-$1000</option>
-                  <option value="$1000-$1500">$1000-$1500</option>
-                  <option value="$1500-$2000">$1500-$2000</option>
-                  <option value="$2000+">$2000+</option>
+                  <option value="Under 500">Under 500</option>
+                  <option value="500-800">500-800</option>
+                  <option value="800-1000">800-1000</option>
+                  <option value="1000-1500">1000-1500</option>
+                  <option value="1500-2000">1500-2000</option>
+                  <option value="2000+">2000+</option>
                 </select>
               </div>
 
@@ -730,7 +992,11 @@ const GymLeadsTracking = () => {
                   disabled={isLoading}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-red-500/50 transition-all duration-300 disabled:opacity-50"
                 >
-                  {isLoading ? 'Saving...' : editMode ? 'Update Lead' : 'Add Lead'}
+                  {isLoading
+                    ? "Saving..."
+                    : editMode
+                      ? "Update Lead"
+                      : "Add Lead"}
                 </button>
               </div>
             </div>
@@ -739,18 +1005,22 @@ const GymLeadsTracking = () => {
       </div>
 
       {/* Follow-up Drawer */}
-      <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isFollowUpOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div 
+      <div
+        className={`fixed inset-0 z-50 transition-opacity duration-300 ${isFollowUpOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      >
+        <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setIsFollowUpOpen(false)}
         />
-        
-        <div className={`absolute right-0 top-0 h-full w-full sm:w-[500px] bg-gray-800 border-l border-gray-700 shadow-2xl transition-transform duration-300 overflow-y-auto ${isFollowUpOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+
+        <div
+          className={`absolute right-0 top-0 h-full w-full sm:w-[500px] bg-gray-800 border-l border-gray-700 shadow-2xl transition-transform duration-300 overflow-y-auto ${isFollowUpOpen ? "translate-x-0" : "translate-x-full"}`}
+        >
           <div className="h-full flex flex-col">
             <div className="p-6 border-b border-gray-700 bg-gradient-to-r from-blue-600 to-blue-700 sticky top-0 z-10">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">Add Follow-up</h2>
-                <button 
+                <button
                   onClick={() => setIsFollowUpOpen(false)}
                   className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                 >
@@ -760,7 +1030,9 @@ const GymLeadsTracking = () => {
               {selectedLead && (
                 <div className="mt-3 text-blue-100">
                   <p className="font-semibold">{selectedLead.fullName}</p>
-                  <p className="text-sm">{selectedLead.phoneNumber} • {selectedLead.email}</p>
+                  <p className="text-sm">
+                    {selectedLead.phoneNumber} • {selectedLead.email}
+                  </p>
                 </div>
               )}
             </div>
@@ -843,31 +1115,43 @@ const GymLeadsTracking = () => {
                 />
               </div>
 
-              {selectedLead && selectedLead.followUps && selectedLead.followUps.length > 0 && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
-                    <History className="w-4 h-4 inline mr-2" />
-                    Previous Follow-ups ({selectedLead.followUps.length})
-                  </label>
-                  <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {selectedLead.followUps.slice().reverse().map((followUp, index) => (
-                      <div key={index} className="bg-gray-700/50 rounded-lg p-3 border-l-4 border-blue-500">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-white">
-                            {new Date(followUp.date).toLocaleDateString()}
-                          </span>
-                          <span className="flex items-center gap-1 text-xs text-blue-400">
-                            {getFollowUpIcon(followUp.method)}
-                            {followUp.method}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-300">{followUp.notes}</p>
-                        <p className="text-xs text-gray-400 mt-1">Outcome: {followUp.outcome}</p>
-                      </div>
-                    ))}
+              {selectedLead &&
+                selectedLead.followUps &&
+                selectedLead.followUps.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                      <History className="w-4 h-4 inline mr-2" />
+                      Previous Follow-ups ({selectedLead.followUps.length})
+                    </label>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {selectedLead.followUps
+                        .slice()
+                        .reverse()
+                        .map((followUp, index) => (
+                          <div
+                            key={index}
+                            className="bg-gray-700/50 rounded-lg p-3 border-l-4 border-blue-500"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-semibold text-white">
+                                {new Date(followUp.date).toLocaleDateString()}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs text-blue-400">
+                                {getFollowUpIcon(followUp.method)}
+                                {followUp.method}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-300">
+                              {followUp.notes}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Outcome: {followUp.outcome}
+                            </p>
+                          </div>
+                        ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
 
             <div className="p-6 border-t border-gray-700 bg-gray-800/80 backdrop-blur-sm sticky bottom-0">
@@ -884,7 +1168,7 @@ const GymLeadsTracking = () => {
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  {isLoading ? 'Adding...' : 'Add Follow-up'}
+                  {isLoading ? "Adding..." : "Add Follow-up"}
                 </button>
               </div>
             </div>
@@ -893,19 +1177,25 @@ const GymLeadsTracking = () => {
       </div>
 
       {/* Lead Detail Drawer */}
-      <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isDetailOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div 
+      <div
+        className={`fixed inset-0 z-50 transition-opacity duration-300 ${isDetailOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      >
+        <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setIsDetailOpen(false)}
         />
-        
-        <div className={`absolute right-0 top-0 h-full w-full sm:w-[600px] bg-gray-800 border-l border-gray-700 shadow-2xl transition-transform duration-300 overflow-y-auto ${isDetailOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+
+        <div
+          className={`absolute right-0 top-0 h-full w-full sm:w-[600px] bg-gray-800 border-l border-gray-700 shadow-2xl transition-transform duration-300 overflow-y-auto ${isDetailOpen ? "translate-x-0" : "translate-x-full"}`}
+        >
           {selectedLead && (
             <div className="h-full flex flex-col">
               <div className="p-6 border-b border-gray-700 bg-gradient-to-r from-purple-600 to-purple-700 sticky top-0 z-10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white">Lead Details</h2>
-                  <button 
+                  <h2 className="text-2xl font-bold text-white">
+                    Lead Details
+                  </h2>
+                  <button
                     onClick={() => setIsDetailOpen(false)}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                   >
@@ -921,13 +1211,18 @@ const GymLeadsTracking = () => {
                     {selectedLead.fullName.charAt(0)}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white">{selectedLead.fullName}</h3>
+                    <h3 className="text-xl font-bold text-white">
+                      {selectedLead.fullName}
+                    </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(selectedLead.leadStatus)}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(selectedLead.leadStatus)}`}
+                      >
                         {selectedLead.leadStatus}
                       </span>
                       <span className="text-sm text-gray-400">
-                        Added: {new Date(selectedLead.addedDate).toLocaleDateString()}
+                        Added:{" "}
+                        {new Date(selectedLead.addedDate).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -938,14 +1233,18 @@ const GymLeadsTracking = () => {
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Mail className="w-4 h-4 text-purple-400" />
-                      <span className="text-sm font-semibold text-gray-300">Email</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        Email
+                      </span>
                     </div>
                     <p className="text-white">{selectedLead.email}</p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Phone className="w-4 h-4 text-purple-400" />
-                      <span className="text-sm font-semibold text-gray-300">Phone</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        Phone
+                      </span>
                     </div>
                     <p className="text-white">{selectedLead.phoneNumber}</p>
                   </div>
@@ -956,22 +1255,34 @@ const GymLeadsTracking = () => {
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Tag className="w-4 h-4 text-purple-400" />
-                      <span className="text-sm font-semibold text-gray-300">Source</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        Source
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{getSourceIcon(selectedLead.leadSource)}</span>
-                      <span className="text-white">{selectedLead.leadSource}</span>
+                      <span className="text-lg">
+                        {getSourceIcon(selectedLead.leadSource)}
+                      </span>
+                      <span className="text-white">
+                        {selectedLead.leadSource}
+                      </span>
                     </div>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-sm font-semibold text-gray-300">Interested In</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        Interested In
+                      </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      selectedLead.interestedPackage === 'VIP' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' :
-                      selectedLead.interestedPackage === 'Premium' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white' :
-                      'bg-gradient-to-r from-gray-600 to-gray-700 text-white'
-                    }`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        selectedLead.interestedPackage === "VIP"
+                          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                          : selectedLead.interestedPackage === "Premium"
+                            ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                            : "bg-gradient-to-r from-gray-600 to-gray-700 text-white"
+                      }`}
+                    >
                       {selectedLead.interestedPackage}
                     </span>
                   </div>
@@ -980,13 +1291,19 @@ const GymLeadsTracking = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-sm font-semibold text-gray-300">Budget</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        Budget
+                      </span>
                     </div>
-                    <p className="text-white font-semibold">{selectedLead.budgetRange}</p>
+                    <p className="text-white font-semibold">
+                      {selectedLead.budgetRange}
+                    </p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-sm font-semibold text-gray-300">Preferred Contact</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        Preferred Contact
+                      </span>
                     </div>
                     <p className="text-white">{selectedLead.contactMethod}</p>
                   </div>
@@ -994,16 +1311,20 @@ const GymLeadsTracking = () => {
 
                 <div className="bg-gray-700/50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm font-semibold text-gray-300">Lead Score</span>
+                    <span className="text-sm font-semibold text-gray-300">
+                      Lead Score
+                    </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 bg-gray-600 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-gradient-to-r from-purple-600 to-purple-700 h-2 rounded-full transition-all"
                         style={{ width: `${selectedLead.leadScore || 0}%` }}
                       />
                     </div>
-                    <span className="text-white font-semibold">{selectedLead.leadScore || 0}/100</span>
+                    <span className="text-white font-semibold">
+                      {selectedLead.leadScore || 0}/100
+                    </span>
                   </div>
                 </div>
 
@@ -1012,17 +1333,24 @@ const GymLeadsTracking = () => {
                   <div className="bg-gradient-to-r from-orange-600 to-orange-700 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock className="w-4 h-4 text-white" />
-                      <span className="text-sm font-semibold text-white">Next Follow-up</span>
+                      <span className="text-sm font-semibold text-white">
+                        Next Follow-up
+                      </span>
                     </div>
                     <p className="text-white font-semibold text-lg">
-                      {new Date(selectedLead.nextFollowUpDate).toLocaleDateString()}
+                      {new Date(
+                        selectedLead.nextFollowUpDate,
+                      ).toLocaleDateString()}
                     </p>
                     <p className="text-orange-100 text-sm mt-1">
-                      {new Date(selectedLead.nextFollowUpDate).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
-                        ? 'Due today!' 
+                      {new Date(selectedLead.nextFollowUpDate)
+                        .toISOString()
+                        .split("T")[0] ===
+                      new Date().toISOString().split("T")[0]
+                        ? "Due today!"
                         : new Date(selectedLead.nextFollowUpDate) < new Date()
-                        ? 'Overdue!'
-                        : 'Upcoming'}
+                          ? "Overdue!"
+                          : "Upcoming"}
                     </p>
                   </div>
                 )}
@@ -1032,7 +1360,9 @@ const GymLeadsTracking = () => {
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <MessageSquare className="w-4 h-4 text-purple-400" />
-                      <span className="text-sm font-semibold text-gray-300">Notes</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        Notes
+                      </span>
                     </div>
                     <p className="text-white">{selectedLead.notes}</p>
                   </div>
@@ -1043,32 +1373,47 @@ const GymLeadsTracking = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <History className="w-4 h-4 text-purple-400" />
-                      <span className="text-sm font-semibold text-gray-300">Follow-up History</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        Follow-up History
+                      </span>
                     </div>
                     <span className="text-xs text-gray-400">
                       {selectedLead.followUps?.length || 0} entries
                     </span>
                   </div>
-                  
+
                   <div className="space-y-3">
-                    {selectedLead.followUps && selectedLead.followUps.length > 0 ? (
-                      selectedLead.followUps.slice().reverse().map((followUp, index) => (
-                        <div key={index} className="border-l-4 border-purple-500 pl-4 py-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-semibold text-white">
-                              {new Date(followUp.date).toLocaleDateString()}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs text-purple-400">
-                              {getFollowUpIcon(followUp.method)}
-                              {followUp.method}
-                            </span>
+                    {selectedLead.followUps &&
+                    selectedLead.followUps.length > 0 ? (
+                      selectedLead.followUps
+                        .slice()
+                        .reverse()
+                        .map((followUp, index) => (
+                          <div
+                            key={index}
+                            className="border-l-4 border-purple-500 pl-4 py-2"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-semibold text-white">
+                                {new Date(followUp.date).toLocaleDateString()}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs text-purple-400">
+                                {getFollowUpIcon(followUp.method)}
+                                {followUp.method}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-300">
+                              {followUp.notes}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Outcome: {followUp.outcome}
+                            </p>
                           </div>
-                          <p className="text-sm text-gray-300">{followUp.notes}</p>
-                          <p className="text-xs text-gray-400 mt-1">Outcome: {followUp.outcome}</p>
-                        </div>
-                      ))
+                        ))
                     ) : (
-                      <p className="text-gray-400 text-sm text-center py-4">No follow-ups recorded yet</p>
+                      <p className="text-gray-400 text-sm text-center py-4">
+                        No follow-ups recorded yet
+                      </p>
                     )}
                   </div>
                 </div>
