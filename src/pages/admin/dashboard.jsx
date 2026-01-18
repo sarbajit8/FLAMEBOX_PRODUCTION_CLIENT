@@ -133,7 +133,6 @@ const AdminDashboard = () => {
 
       // Fetch all leads with date range filter
       const url = `${apiBase}/api/leads?limit=1000&startDate=${dateRange.start}&endDate=${dateRange.end}`;
-     
 
       const leadsResponse = await axios.get(url, {
         withCredentials: true,
@@ -367,7 +366,10 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-2 font-semibold text-sm transition-colors ${
                   activeTab === tab
-                    ? tab === "Revenue"
+                    ? tab === "Revenue" ||
+                      tab === "Analytics" ||
+                      tab === "Engagement" ||
+                      tab === "Acquisition"
                       ? "bg-orange-500 text-white"
                       : "bg-gray-700 text-white"
                     : "bg-gray-800 text-gray-400 hover:text-white"
@@ -577,149 +579,156 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                   ))
-              : activeTab === "Analytics"
-                ? [
-                    // Revenue Stats
-                    {
-                      value: loading ? "..." : formatCurrency(dashboardStats.totalRevenue),
-                      label: "Total Sales",
-                      icon: DollarSign,
-                      change: "-58%",
-                      changeType: "decrease",
-                      category: "Revenue",
-                    },
-                    {
-                      value: loading ? "..." : formatCurrency(dashboardStats.totalPaid),
-                      label: "Payment Received",
-                      icon: CreditCard,
-                      change: "-50%",
-                      changeType: "decrease",
-                      category: "Revenue",
-                    },
-                    {
-                      value: loading ? "..." : formatCurrency(dashboardStats.totalPending),
-                      label: "Pending Payments",
-                      icon: Clock,
-                      change: "+1900%",
-                      changeType: "increase",
-                      category: "Revenue",
-                    },
-                    {
-                      value: loading ? "..." : dashboardStats.totalMembers,
-                      label: "Packages Sold",
-                      icon: FileCheck,
-                      change: "-54%",
-                      changeType: "decrease",
-                      category: "Revenue",
-                    },
-                    // Acquisition Stats
-                    {
-                      value: leadsStats.totalLeads,
-                      label: "Lead Generated",
-                      icon: Users,
-                      change: "+12%",
-                      changeType: "increase",
-                      category: "Acquisition",
-                    },
-                    {
-                      value: leadsStats.totalLeads - leadsStats.convertedLeads,
-                      label: "Open Leads",
-                      icon: Activity,
-                      change: "+8%",
-                      changeType: "increase",
-                      category: "Acquisition",
-                    },
-                    {
-                      value: leadsStats.convertedLeads,
-                      label: "Leads Converted",
-                      icon: FileCheck,
-                      change: "+5%",
-                      changeType: "increase",
-                      category: "Acquisition",
-                    },
-                    {
-                      value: leadsStats.coldLeads,
-                      label: "Unqualified Leads",
-                      icon: TrendingDown,
-                      change: "-2%",
-                      changeType: "decrease",
-                      category: "Acquisition",
-                    },
-                    // Engagement Stats
-                    {
-                      value: engagementStats.newMemberships,
-                      label: "New Memberships",
-                      icon: Users,
-                      change: "71%",
-                      changeType: "decrease",
-                      category: "Engagement",
-                    },
-                    {
-                      value: engagementStats.renewals || "--",
-                      label: "Membership Renewals",
-                      icon: FileCheck,
-                      change: "--",
-                      changeType: "decrease",
-                      category: "Engagement",
-                    },
-                    {
-                      value: engagementStats.activeMembers,
-                      label: "Active Members",
-                      icon: Activity,
-                      change: "0%",
-                      changeType: "decrease",
-                      category: "Engagement",
-                    },
-                    {
-                      value: engagementStats.inactiveMembers,
-                      label: "Inactive Members",
-                      icon: TrendingDown,
-                      change: "31%",
-                      changeType: "increase",
-                      category: "Engagement",
-                    },
-                  ].map((stat, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-gray-800 border border-gray-700 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-3 bg-gray-700 rounded-lg">
-                            <stat.icon className="w-5 h-5 text-gray-400" />
+                : activeTab === "Analytics"
+                  ? [
+                      // Revenue Stats
+                      {
+                        value: loading
+                          ? "..."
+                          : formatCurrency(dashboardStats.totalRevenue),
+                        label: "Total Sales",
+                        icon: DollarSign,
+                        change: "-58%",
+                        changeType: "decrease",
+                        category: "Revenue",
+                      },
+                      {
+                        value: loading
+                          ? "..."
+                          : formatCurrency(dashboardStats.totalPaid),
+                        label: "Payment Received",
+                        icon: CreditCard,
+                        change: "-50%",
+                        changeType: "decrease",
+                        category: "Revenue",
+                      },
+                      {
+                        value: loading
+                          ? "..."
+                          : formatCurrency(dashboardStats.totalPending),
+                        label: "Pending Payments",
+                        icon: Clock,
+                        change: "+1900%",
+                        changeType: "increase",
+                        category: "Revenue",
+                      },
+                      {
+                        value: loading ? "..." : dashboardStats.totalMembers,
+                        label: "Packages Sold",
+                        icon: FileCheck,
+                        change: "-54%",
+                        changeType: "decrease",
+                        category: "Revenue",
+                      },
+                      // Acquisition Stats
+                      {
+                        value: leadsStats.totalLeads,
+                        label: "Lead Generated",
+                        icon: Users,
+                        change: "+12%",
+                        changeType: "increase",
+                        category: "Acquisition",
+                      },
+                      {
+                        value:
+                          leadsStats.totalLeads - leadsStats.convertedLeads,
+                        label: "Open Leads",
+                        icon: Activity,
+                        change: "+8%",
+                        changeType: "increase",
+                        category: "Acquisition",
+                      },
+                      {
+                        value: leadsStats.convertedLeads,
+                        label: "Leads Converted",
+                        icon: FileCheck,
+                        change: "+5%",
+                        changeType: "increase",
+                        category: "Acquisition",
+                      },
+                      {
+                        value: leadsStats.coldLeads,
+                        label: "Unqualified Leads",
+                        icon: TrendingDown,
+                        change: "-2%",
+                        changeType: "decrease",
+                        category: "Acquisition",
+                      },
+                      // Engagement Stats
+                      {
+                        value: engagementStats.newMemberships,
+                        label: "New Memberships",
+                        icon: Users,
+                        change: "71%",
+                        changeType: "decrease",
+                        category: "Engagement",
+                      },
+                      {
+                        value: engagementStats.renewals || "--",
+                        label: "Membership Renewals",
+                        icon: FileCheck,
+                        change: "--",
+                        changeType: "decrease",
+                        category: "Engagement",
+                      },
+                      {
+                        value: engagementStats.activeMembers,
+                        label: "Active Members",
+                        icon: Activity,
+                        change: "0%",
+                        changeType: "decrease",
+                        category: "Engagement",
+                      },
+                      {
+                        value: engagementStats.inactiveMembers,
+                        label: "Inactive Members",
+                        icon: TrendingDown,
+                        change: "31%",
+                        changeType: "increase",
+                        category: "Engagement",
+                      },
+                    ].map((stat, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-gray-800 border border-gray-700 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-3 bg-gray-700 rounded-lg">
+                              <stat.icon className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500 font-semibold">
+                                {stat.category}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {stat.label}
+                              </div>
+                              <div className="text-2xl font-bold text-white">
+                                {stat.value}
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-xs text-gray-500 font-semibold">
-                              {stat.category}
-                            </div>
-                            <div className="text-sm text-gray-400">
-                              {stat.label}
-                            </div>
-                            <div className="text-2xl font-bold text-white">
-                              {stat.value}
-                            </div>
+                          <div
+                            className={`flex items-center gap-1 px-2 py-1 rounded ${
+                              stat.changeType === "decrease"
+                                ? "bg-red-500/10 text-red-400"
+                                : "bg-green-500/10 text-green-400"
+                            }`}
+                          >
+                            {stat.changeType === "decrease" ? (
+                              <TrendingDown className="w-4 h-4" />
+                            ) : (
+                              <TrendingUp className="w-4 h-4" />
+                            )}
+                            <span className="text-xs font-semibold">
+                              {stat.change}
+                            </span>
                           </div>
-                        </div>
-                        <div
-                          className={`flex items-center gap-1 px-2 py-1 rounded ${
-                            stat.changeType === "decrease"
-                              ? "bg-red-500/10 text-red-400"
-                              : "bg-green-500/10 text-green-400"
-                          }`}
-                        >
-                          {stat.changeType === "decrease" ? (
-                            <TrendingDown className="w-4 h-4" />
-                          ) : (
-                            <TrendingUp className="w-4 h-4" />
-                          )}
-                          <span className="text-xs font-semibold">
-                            {stat.change}
-                          </span>
                         </div>
                       </div>
-                    </div>
-                  ))
-                : null}
+                    ))
+                  : null}
         </div>
       </div>
 
@@ -1337,9 +1346,9 @@ const AdminDashboard = () => {
                           (source.count /
                             Math.max(
                               ...analyticsStats.leadsBySource.map(
-                                (s) => s.count
+                                (s) => s.count,
                               ),
-                              1
+                              1,
                             )) *
                           100
                         }%`,
@@ -1392,13 +1401,13 @@ const AdminDashboard = () => {
                     <span>
                       {Math.max(
                         ...analyticsStats.monthlyTrends.map((t) => t.leads),
-                        1
+                        1,
                       )}
                     </span>
                     <span>
                       {Math.max(
                         ...analyticsStats.monthlyTrends.map((t) => t.leads),
-                        1
+                        1,
                       ) / 2}
                     </span>
                     <span>0</span>
@@ -1426,10 +1435,12 @@ const AdminDashboard = () => {
                     {analyticsStats.monthlyTrends.map((trend, i) => {
                       const maxLeads = Math.max(
                         ...analyticsStats.monthlyTrends.map((t) => t.leads),
-                        1
+                        1,
                       );
-                      const x = 60 + (i * 600) / analyticsStats.monthlyTrends.length;
-                      const barWidth = 600 / (analyticsStats.monthlyTrends.length * 1.5);
+                      const x =
+                        60 + (i * 600) / analyticsStats.monthlyTrends.length;
+                      const barWidth =
+                        600 / (analyticsStats.monthlyTrends.length * 1.5);
                       const height = (trend.leads / maxLeads) * 250;
 
                       return (

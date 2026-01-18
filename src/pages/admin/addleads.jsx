@@ -51,6 +51,28 @@ const GymLeadsTracking = () => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    name: "",
+    email: "",
+    contactNumber: "",
+    gender: "",
+    leadSource: "",
+    assignedTo: "",
+    fitnessActivity: "",
+    leadType: "",
+    leadStatus: "",
+    leadStage: "",
+    leadStageStatus: "",
+    createdDateFrom: "",
+    createdDateTo: "",
+    followUpDateFrom: "",
+    followUpDateTo: "",
+    trialDateFrom: "",
+    trialDateTo: "",
+    updatedDateFrom: "",
+    updatedDateTo: "",
+  });
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -71,6 +93,28 @@ const GymLeadsTracking = () => {
     dispatch(fetchAllLeads({ page: 1, limit: itemsPerPage }));
     dispatch(fetchLeadStatistics());
   }, [dispatch, itemsPerPage]);
+
+  // Fetch all leads when filters are active
+  useEffect(() => {
+    const hasActiveFilters = Object.values(filters).some(
+      (value) => value !== "",
+    );
+    if (hasActiveFilters) {
+      // Fetch all leads (large limit) when filters are active
+      dispatch(fetchAllLeads({ page: 1, limit: 10000 }));
+    }
+  }, [filters, dispatch]);
+
+  // Fetch all leads when filters are active
+  useEffect(() => {
+    const hasActiveFilters = Object.values(filters).some(
+      (value) => value !== "",
+    );
+    if (hasActiveFilters) {
+      // Fetch all leads (large limit) when filters are active
+      dispatch(fetchAllLeads({ page: 1, limit: 10000 }));
+    }
+  }, [filters, dispatch]);
 
   // Handle success/error messages
   useEffect(() => {
@@ -317,7 +361,189 @@ const GymLeadsTracking = () => {
     }
   };
 
-  const filteredLeads =
+  const handleFilterInputChange = (field, value) => {
+    // Trim whitespace for text inputs
+    const trimmedValue = typeof value === "string" ? value.trim() : value;
+    setFilters((prev) => ({ ...prev, [field]: trimmedValue }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      name: "",
+      email: "",
+      contactNumber: "",
+      gender: "",
+      leadSource: "",
+      assignedTo: "",
+      fitnessActivity: "",
+      leadType: "",
+      leadStatus: "",
+      leadStage: "",
+      leadStageStatus: "",
+      createdDateFrom: "",
+      createdDateTo: "",
+      followUpDateFrom: "",
+      followUpDateTo: "",
+      trialDateFrom: "",
+      trialDateTo: "",
+      updatedDateFrom: "",
+      updatedDateTo: "",
+    });
+    // Reset to normal pagination
+    dispatch(fetchAllLeads({ page: 1, limit: itemsPerPage }));
+  };
+
+  const applyFilters = (leadsArray) => {
+    return leadsArray.filter((lead) => {
+      // Name filter
+      if (
+        filters.name &&
+        !lead.fullName
+          .toLowerCase()
+          .trim()
+          .includes(filters.name.toLowerCase().trim())
+      ) {
+        return false;
+      }
+
+      // Email filter
+      if (
+        filters.email &&
+        !lead.email
+          .toLowerCase()
+          .trim()
+          .includes(filters.email.toLowerCase().trim())
+      ) {
+        return false;
+      }
+
+      // Contact Number filter
+      if (
+        filters.contactNumber &&
+        !lead.phoneNumber.trim().includes(filters.contactNumber.trim())
+      ) {
+        return false;
+      }
+
+      // Gender filter
+      if (filters.gender && lead.gender !== filters.gender) {
+        return false;
+      }
+
+      // Lead Source filter
+      if (filters.leadSource && lead.leadSource !== filters.leadSource) {
+        return false;
+      }
+
+      // Assigned To filter
+      if (filters.assignedTo && lead.assignedTo !== filters.assignedTo) {
+        return false;
+      }
+
+      // Fitness Activity filter
+      if (
+        filters.fitnessActivity &&
+        (!lead.interestedServices ||
+          !lead.interestedServices.includes(filters.fitnessActivity))
+      ) {
+        return false;
+      }
+
+      // Lead Type filter (using interestedPackage as lead type)
+      if (filters.leadType && lead.interestedPackage !== filters.leadType) {
+        return false;
+      }
+
+      // Lead Status filter
+      if (filters.leadStatus && lead.leadStatus !== filters.leadStatus) {
+        return false;
+      }
+
+      // Lead Stage filter (using leadPriority as lead stage)
+      if (filters.leadStage && lead.leadPriority !== filters.leadStage) {
+        return false;
+      }
+
+      // Lead Stage Status filter
+      if (
+        filters.leadStageStatus &&
+        lead.leadStageStatus !== filters.leadStageStatus
+      ) {
+        return false;
+      }
+
+      // Created Date filter
+      if (filters.createdDateFrom || filters.createdDateTo) {
+        const createdDate = new Date(lead.addedDate);
+        if (
+          filters.createdDateFrom &&
+          createdDate < new Date(filters.createdDateFrom)
+        ) {
+          return false;
+        }
+        if (
+          filters.createdDateTo &&
+          createdDate > new Date(filters.createdDateTo)
+        ) {
+          return false;
+        }
+      }
+
+      // Follow Up Date filter
+      if (filters.followUpDateFrom || filters.followUpDateTo) {
+        if (!lead.nextFollowUpDate) return false;
+        const followUpDate = new Date(lead.nextFollowUpDate);
+        if (
+          filters.followUpDateFrom &&
+          followUpDate < new Date(filters.followUpDateFrom)
+        ) {
+          return false;
+        }
+        if (
+          filters.followUpDateTo &&
+          followUpDate > new Date(filters.followUpDateTo)
+        ) {
+          return false;
+        }
+      }
+
+      // Trial Date filter
+      if (filters.trialDateFrom || filters.trialDateTo) {
+        if (!lead.trialDate) return false;
+        const trialDate = new Date(lead.trialDate);
+        if (
+          filters.trialDateFrom &&
+          trialDate < new Date(filters.trialDateFrom)
+        ) {
+          return false;
+        }
+        if (filters.trialDateTo && trialDate > new Date(filters.trialDateTo)) {
+          return false;
+        }
+      }
+
+      // Updated Date filter
+      if (filters.updatedDateFrom || filters.updatedDateTo) {
+        const updatedDate = new Date(lead.updatedAt);
+        if (
+          filters.updatedDateFrom &&
+          updatedDate < new Date(filters.updatedDateFrom)
+        ) {
+          return false;
+        }
+        if (
+          filters.updatedDateTo &&
+          updatedDate > new Date(filters.updatedDateTo)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  const filteredLeads = applyFilters(
     activeFilter === "today"
       ? leads.filter((lead) => {
           if (!lead.nextFollowUpDate) return false;
@@ -327,7 +553,8 @@ const GymLeadsTracking = () => {
           const today = new Date().toISOString().split("T")[0];
           return followUpDate === today;
         })
-      : leads;
+      : leads,
+  );
 
   const stats = [
     {
@@ -402,68 +629,466 @@ const GymLeadsTracking = () => {
 
         {/* Filter Tabs */}
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleFilterChange("all")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  activeFilter === "all"
+                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                All Leads
+              </button>
+              <button
+                onClick={() => handleFilterChange("New")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  activeFilter === "New"
+                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                New
+              </button>
+              <button
+                onClick={() => handleFilterChange("Hot")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  activeFilter === "Hot"
+                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                Hot
+              </button>
+              <button
+                onClick={() => handleFilterChange("Warm")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  activeFilter === "Warm"
+                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                Warm
+              </button>
+              <button
+                onClick={() => handleFilterChange("Cold")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  activeFilter === "Cold"
+                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                Cold
+              </button>
+              <button
+                onClick={() => handleFilterChange("today")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  activeFilter === "today"
+                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                Follow-up Today
+              </button>
+            </div>
             <button
-              onClick={() => handleFilterChange("all")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === "all"
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
             >
-              All Leads
-            </button>
-            <button
-              onClick={() => handleFilterChange("New")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === "New"
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              New
-            </button>
-            <button
-              onClick={() => handleFilterChange("Hot")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === "Hot"
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Hot
-            </button>
-            <button
-              onClick={() => handleFilterChange("Warm")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === "Warm"
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Warm
-            </button>
-            <button
-              onClick={() => handleFilterChange("Cold")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === "Cold"
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Cold
-            </button>
-            <button
-              onClick={() => handleFilterChange("today")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeFilter === "today"
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Follow-up Today
+              {showFilters ? (
+                <>
+                  <XCircle className="w-4 h-4" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <Tag className="w-4 h-4" />
+                  Show Filters
+                </>
+              )}
             </button>
           </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="mt-4 p-6 bg-gray-900/50 rounded-lg border border-gray-700">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-red-500" />
+                Advanced Filters
+              </h3>
+
+              {/* Filter Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Name Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter Name"
+                    value={filters.name}
+                    onChange={(e) =>
+                      handleFilterInputChange("name", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Email Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Enter Email"
+                    value={filters.email}
+                    onChange={(e) =>
+                      handleFilterInputChange("email", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Contact Number Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Contact Number
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter Mobile Number"
+                    value={filters.contactNumber}
+                    onChange={(e) =>
+                      handleFilterInputChange("contactNumber", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Gender Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Gender
+                  </label>
+                  <select
+                    value={filters.gender}
+                    onChange={(e) =>
+                      handleFilterInputChange("gender", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
+                </div>
+
+                {/* Lead Source Type Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Lead Source Type
+                  </label>
+                  <select
+                    value={filters.leadSource}
+                    onChange={(e) =>
+                      handleFilterInputChange("leadSource", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Twitter">Twitter</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Google Ads">Google Ads</option>
+                    <option value="Walk-in">Walk-in</option>
+                    <option value="Referral">Referral</option>
+                    <option value="Website">Website</option>
+                    <option value="Phone Call">Phone Call</option>
+                    <option value="Email">Email</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Events">Events</option>
+                    <option value="Flyer">Flyer</option>
+                    <option value="Billboard">Billboard</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {/* Assigned To Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Assigned To
+                  </label>
+                  <select
+                    value={filters.assignedTo}
+                    onChange={(e) =>
+                      handleFilterInputChange("assignedTo", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    <option value="John Doe">John Doe</option>
+                    <option value="Jane Smith">Jane Smith</option>
+                    <option value="Mike Johnson">Mike Johnson</option>
+                    <option value="Sarah Williams">Sarah Williams</option>
+                  </select>
+                </div>
+
+                {/* Fitness Activity Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Fitness Activity
+                  </label>
+                  <select
+                    value={filters.fitnessActivity}
+                    onChange={(e) =>
+                      handleFilterInputChange("fitnessActivity", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    <option value="Gym">Gym</option>
+                    <option value="Yoga">Yoga</option>
+                    <option value="Zumba">Zumba</option>
+                    <option value="Personal Training">Personal Training</option>
+                    <option value="Diet Consultation">Diet Consultation</option>
+                    <option value="Cardio">Cardio</option>
+                    <option value="Strength Training">Strength Training</option>
+                  </select>
+                </div>
+
+                {/* Lead Type Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Lead Type
+                  </label>
+                  <select
+                    value={filters.leadType}
+                    onChange={(e) =>
+                      handleFilterInputChange("leadType", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    <option value="Basic">Basic</option>
+                    <option value="Standard">Standard</option>
+                    <option value="Premium">Premium</option>
+                    <option value="VIP">VIP</option>
+                    <option value="Custom">Custom</option>
+                    <option value="Not Decided">Not Decided</option>
+                  </select>
+                </div>
+
+                {/* Lead Status Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Lead Status
+                  </label>
+                  <select
+                    value={filters.leadStatus}
+                    onChange={(e) =>
+                      handleFilterInputChange("leadStatus", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    <option value="New">New</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Qualified">Qualified</option>
+                    <option value="Hot">Hot</option>
+                    <option value="Warm">Warm</option>
+                    <option value="Cold">Cold</option>
+                    <option value="Converted">Converted</option>
+                    <option value="Lost">Lost</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Follow-up Required">
+                      Follow-up Required
+                    </option>
+                  </select>
+                </div>
+
+                {/* Lead Stage Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Lead Stage
+                  </label>
+                  <select
+                    value={filters.leadStage}
+                    onChange={(e) =>
+                      handleFilterInputChange("leadStage", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+
+                {/* Lead Stage Status Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Lead Stage Status
+                  </label>
+                  <select
+                    value={filters.leadStageStatus}
+                    onChange={(e) =>
+                      handleFilterInputChange("leadStageStatus", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+                </div>
+
+                {/* Created Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Created Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.createdDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange("createdDateFrom", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Created Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Created Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.createdDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange("createdDateTo", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* FollowUp Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    FollowUp Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.followUpDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "followUpDateFrom",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* FollowUp Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    FollowUp Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.followUpDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange("followUpDateTo", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Trial Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Trial Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.trialDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange("trialDateFrom", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Trial Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Trial Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.trialDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange("trialDateTo", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Updated Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Updated Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.updatedDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange("updatedDateFrom", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Updated Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Updated Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.updatedDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange("updatedDateTo", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+
+              {/* Filter Actions */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleClearFilters}
+                  className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Clear All Filters
+                </button>
+                <div className="ml-auto text-sm text-gray-400 flex items-center">
+                  Showing {filteredLeads.length} of {leads.length} leads
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Leads Table */}

@@ -170,6 +170,29 @@ const Addmember = () => {
   const [validationResults, setValidationResults] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
 
+  // Advanced Filter States
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+    registrationNumber: "",
+    membershipCreationDateFrom: "",
+    membershipCreationDateTo: "",
+    packageActivationDateFrom: "",
+    packageActivationDateTo: "",
+    packagePaymentDateFrom: "",
+    packagePaymentDateTo: "",
+    paymentDueDateFrom: "",
+    paymentDueDateTo: "",
+    packageExpiryDateFrom: "",
+    packageExpiryDateTo: "",
+    membershipPackage: "",
+    membershipStatus: "",
+    gender: "",
+    vaccinationStatus: "",
+  });
+
   const [formData, setFormData] = useState({
     registrationNumber: "",
     fullName: "",
@@ -235,13 +258,13 @@ const Addmember = () => {
       {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-      }
+      },
     )
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
           const trainersList = (data.users || []).filter(
-            (user) => user.role === "trainer"
+            (user) => user.role === "trainer",
           );
           setTrainers(trainersList);
           console.log("Trainers fetched from Users:", trainersList);
@@ -249,6 +272,17 @@ const Addmember = () => {
       })
       .catch((err) => console.error("Failed to fetch trainers:", err));
   }, [dispatch, currentPage, membersPerPage]);
+
+  // Fetch all members when filters are active
+  useEffect(() => {
+    const hasActiveFilters = Object.values(filters).some(
+      (value) => value !== "",
+    );
+    if (hasActiveFilters) {
+      // Fetch all members (large limit) when filters are active
+      dispatch(fetchAllMembers({ page: 1, limit: 10000 }));
+    }
+  }, [filters, dispatch]);
 
   // Helper function to get Excel field value
   const getExcelFieldValue = (pkg, ...keys) => {
@@ -269,7 +303,7 @@ const Addmember = () => {
       const normalized = k.toLowerCase().replace(/\s+/g, " ").trim();
       return keys.some(
         (searchKey) =>
-          normalized === searchKey.toLowerCase().replace(/\s+/g, " ").trim()
+          normalized === searchKey.toLowerCase().replace(/\s+/g, " ").trim(),
       );
     });
 
@@ -586,12 +620,12 @@ const Addmember = () => {
 
         if (discountType === "percentage" && discountValue > maxDiscount) {
           toast.error(
-            `Discount cannot exceed ${maxDiscount}% for this package`
+            `Discount cannot exceed ${maxDiscount}% for this package`,
           );
           updated.discount = maxDiscount;
         } else if (discountType === "flat" && discountValue > maxDiscount) {
           toast.error(
-            `Discount cannot exceed ₹${maxDiscount} for this package`
+            `Discount cannot exceed ₹${maxDiscount} for this package`,
           );
           updated.discount = maxDiscount;
         }
@@ -633,7 +667,7 @@ const Addmember = () => {
         if (discountType === "percentage") {
           // For percentage, show the percentage value
           maxDiscount = Math.round(
-            (selectedPackage.savings / selectedPackage.originalPrice) * 100
+            (selectedPackage.savings / selectedPackage.originalPrice) * 100,
           );
         } else {
           // For flat, show the savings amount
@@ -671,7 +705,7 @@ const Addmember = () => {
     }
 
     const selectedPackage = packages.find(
-      (pkg) => pkg._id === packageFormData.packageId
+      (pkg) => pkg._id === packageFormData.packageId,
     );
     if (!selectedPackage) {
       alert("Selected package not found");
@@ -813,7 +847,7 @@ const Addmember = () => {
         {
           method: "POST",
           body: formData,
-        }
+        },
       );
       const data = await response.json();
       return data.secure_url;
@@ -866,7 +900,7 @@ const Addmember = () => {
             name: file.name,
             url: await uploadToCloudinary(file),
             uploadDate: new Date(),
-          }))
+          })),
         );
         documentsArray = [...documentsArray, ...uploadedDocs];
       }
@@ -882,7 +916,7 @@ const Addmember = () => {
 
       if (editMode && currentMemberId) {
         const result = await dispatch(
-          updateMember({ id: currentMemberId, updateData: memberData })
+          updateMember({ id: currentMemberId, updateData: memberData }),
         );
         if (result.error) {
           toast.error(result.error.message || "Failed to update member");
@@ -1011,7 +1045,7 @@ const Addmember = () => {
   const handleOpenEditStartDateModal = (
     packageId,
     packageName,
-    currentDate
+    currentDate,
   ) => {
     setEditingStartDatePackageId(packageId);
     setEditingPackageName(packageName);
@@ -1059,7 +1093,7 @@ const Addmember = () => {
           body: JSON.stringify({
             startDate: newStartDate,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -1080,6 +1114,222 @@ const Addmember = () => {
     }
   };
 
+  const handleFilterInputChange = (field, value) => {
+    // Trim whitespace for text inputs
+    const trimmedValue = typeof value === "string" ? value.trim() : value;
+    setFilters((prev) => ({ ...prev, [field]: trimmedValue }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      name: "",
+      email: "",
+      mobile: "",
+      registrationNumber: "",
+      membershipCreationDateFrom: "",
+      membershipCreationDateTo: "",
+      packageActivationDateFrom: "",
+      packageActivationDateTo: "",
+      packagePaymentDateFrom: "",
+      packagePaymentDateTo: "",
+      paymentDueDateFrom: "",
+      paymentDueDateTo: "",
+      packageExpiryDateFrom: "",
+      packageExpiryDateTo: "",
+      membershipPackage: "",
+      membershipStatus: "",
+      gender: "",
+      vaccinationStatus: "",
+    });
+    // Reset to normal pagination
+    dispatch(fetchAllMembers({ page: currentPage, limit: membersPerPage }));
+  };
+
+  const applyFilters = (membersArray) => {
+    return membersArray.filter((member) => {
+      // Name filter
+      if (
+        filters.name &&
+        !member.fullName
+          .toLowerCase()
+          .trim()
+          .includes(filters.name.toLowerCase().trim())
+      ) {
+        return false;
+      }
+
+      // Email filter
+      if (
+        filters.email &&
+        !member.email
+          .toLowerCase()
+          .trim()
+          .includes(filters.email.toLowerCase().trim())
+      ) {
+        return false;
+      }
+
+      // Mobile filter
+      if (
+        filters.mobile &&
+        !member.phoneNumber.trim().includes(filters.mobile.trim())
+      ) {
+        return false;
+      }
+
+      // Registration Number filter
+      if (
+        filters.registrationNumber &&
+        !member.registrationNumber
+          ?.toLowerCase()
+          .trim()
+          .includes(filters.registrationNumber.toLowerCase().trim())
+      ) {
+        return false;
+      }
+
+      // Gender filter
+      if (filters.gender && member.gender !== filters.gender) {
+        return false;
+      }
+
+      // Vaccination Status filter
+      if (
+        filters.vaccinationStatus &&
+        member.vaccinationStatus !== filters.vaccinationStatus
+      ) {
+        return false;
+      }
+
+      // Membership Status filter
+      if (
+        filters.membershipStatus &&
+        member.memberStatus !== filters.membershipStatus
+      ) {
+        return false;
+      }
+
+      // Membership Package filter
+      if (filters.membershipPackage && member.packages?.length > 0) {
+        const hasPackage = member.packages.some(
+          (pkg) => pkg.packageName === filters.membershipPackage,
+        );
+        if (!hasPackage) return false;
+      }
+
+      // Membership Creation Date filter
+      if (
+        filters.membershipCreationDateFrom ||
+        filters.membershipCreationDateTo
+      ) {
+        const createdDate = new Date(member.joiningDate);
+        if (
+          filters.membershipCreationDateFrom &&
+          createdDate < new Date(filters.membershipCreationDateFrom)
+        ) {
+          return false;
+        }
+        if (
+          filters.membershipCreationDateTo &&
+          createdDate > new Date(filters.membershipCreationDateTo)
+        ) {
+          return false;
+        }
+      }
+
+      // Package Activation Date filter
+      if (
+        filters.packageActivationDateFrom ||
+        filters.packageActivationDateTo
+      ) {
+        if (!member.packages || member.packages.length === 0) return false;
+        const hasMatchingActivation = member.packages.some((pkg) => {
+          const activationDate = new Date(pkg.startDate);
+          if (
+            filters.packageActivationDateFrom &&
+            activationDate < new Date(filters.packageActivationDateFrom)
+          ) {
+            return false;
+          }
+          if (
+            filters.packageActivationDateTo &&
+            activationDate > new Date(filters.packageActivationDateTo)
+          ) {
+            return false;
+          }
+          return true;
+        });
+        if (!hasMatchingActivation) return false;
+      }
+
+      // Package Payment Date filter
+      if (filters.packagePaymentDateFrom || filters.packagePaymentDateTo) {
+        if (!member.packages || member.packages.length === 0) return false;
+        const hasMatchingPayment = member.packages.some((pkg) => {
+          if (!pkg.paymentDate) return false;
+          const paymentDate = new Date(pkg.paymentDate);
+          if (
+            filters.packagePaymentDateFrom &&
+            paymentDate < new Date(filters.packagePaymentDateFrom)
+          ) {
+            return false;
+          }
+          if (
+            filters.packagePaymentDateTo &&
+            paymentDate > new Date(filters.packagePaymentDateTo)
+          ) {
+            return false;
+          }
+          return true;
+        });
+        if (!hasMatchingPayment) return false;
+      }
+
+      // Payment Due Date filter
+      if (filters.paymentDueDateFrom || filters.paymentDueDateTo) {
+        if (!member.dueDate) return false;
+        const dueDate = new Date(member.dueDate);
+        if (
+          filters.paymentDueDateFrom &&
+          dueDate < new Date(filters.paymentDueDateFrom)
+        ) {
+          return false;
+        }
+        if (
+          filters.paymentDueDateTo &&
+          dueDate > new Date(filters.paymentDueDateTo)
+        ) {
+          return false;
+        }
+      }
+
+      // Package Expiry Date filter
+      if (filters.packageExpiryDateFrom || filters.packageExpiryDateTo) {
+        if (!member.packages || member.packages.length === 0) return false;
+        const hasMatchingExpiry = member.packages.some((pkg) => {
+          if (!pkg.endDate) return false;
+          const expiryDate = new Date(pkg.endDate);
+          if (
+            filters.packageExpiryDateFrom &&
+            expiryDate < new Date(filters.packageExpiryDateFrom)
+          ) {
+            return false;
+          }
+          if (
+            filters.packageExpiryDateTo &&
+            expiryDate > new Date(filters.packageExpiryDateTo)
+          ) {
+            return false;
+          }
+          return true;
+        });
+        if (!hasMatchingExpiry) return false;
+      }
+
+      return true;
+    });
+  };
+
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -1089,7 +1339,7 @@ const Addmember = () => {
         status: filterStatus,
         page: 1,
         limit: 10,
-      })
+      }),
     );
   };
 
@@ -1101,7 +1351,7 @@ const Addmember = () => {
         status: status,
         page: 1,
         limit: 10,
-      })
+      }),
     );
   };
 
@@ -1183,7 +1433,7 @@ const Addmember = () => {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ members: bulkImportData }),
-        }
+        },
       );
 
       const result = await response.json();
@@ -1199,11 +1449,11 @@ const Addmember = () => {
 
         if (result.summary.invalid === 0) {
           toast.success(
-            `All ${result.summary.valid} records are valid! Ready to import.`
+            `All ${result.summary.valid} records are valid! Ready to import.`,
           );
         } else {
           toast.warning(
-            `${result.summary.valid} valid, ${result.summary.invalid} invalid records found`
+            `${result.summary.valid} valid, ${result.summary.invalid} invalid records found`,
           );
         }
       } else {
@@ -1225,14 +1475,14 @@ const Addmember = () => {
 
     if (!validationResults) {
       alert(
-        "Please validate the data first by clicking 'Validate Data' button"
+        "Please validate the data first by clicking 'Validate Data' button",
       );
       return;
     }
 
     if (validationResults.invalid > 0) {
       const confirmImport = window.confirm(
-        `There are ${validationResults.invalid} invalid members. Do you want to import only the ${validationResults.valid} valid members?`
+        `There are ${validationResults.invalid} invalid members. Do you want to import only the ${validationResults.valid} valid members?`,
       );
       if (!confirmImport) return;
     }
@@ -1243,7 +1493,7 @@ const Addmember = () => {
     try {
       // Filter only valid members for import
       const validMemberData = validationResults.validMembers.map(
-        (vm) => vm.data
+        (vm) => vm.data,
       );
 
       const response = await fetch(
@@ -1255,7 +1505,7 @@ const Addmember = () => {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ members: validMemberData }),
-        }
+        },
       );
 
       const result = await response.json();
@@ -1266,7 +1516,7 @@ const Addmember = () => {
         dispatch(fetchMemberStatistics());
 
         toast.success(
-          `Successfully imported ${result.summary.successful} members!`
+          `Successfully imported ${result.summary.successful} members!`,
         );
 
         setTimeout(() => {
@@ -1295,7 +1545,7 @@ const Addmember = () => {
         `${
           import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"
         }/api/members/import/template`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       const result = await response.json();
 
@@ -1308,13 +1558,13 @@ const Addmember = () => {
           ([field, instruction]) => ({
             Field: field,
             Instruction: instruction,
-          })
+          }),
         );
         const instructionsSheet = XLSX.utils.json_to_sheet(instructionsData);
         XLSX.utils.book_append_sheet(
           workbook,
           instructionsSheet,
-          "Instructions"
+          "Instructions",
         );
 
         XLSX.writeFile(workbook, "Member_Import_Template.xlsx");
@@ -1483,7 +1733,7 @@ const Addmember = () => {
                 <p className="text-3xl font-bold text-white">
                   {
                     members.filter((m) =>
-                      m.packages?.some((p) => p.paymentStatus === "Pending")
+                      m.packages?.some((p) => p.paymentStatus === "Pending"),
                     ).length
                   }
                 </p>
@@ -1497,7 +1747,7 @@ const Addmember = () => {
 
         {/* Search and Filter */}
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -1519,8 +1769,391 @@ const Addmember = () => {
               >
                 All
               </button>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+              >
+                {showFilters ? (
+                  <>
+                    <XCircle className="w-4 h-4" />
+                    Hide Filters
+                  </>
+                ) : (
+                  <>
+                    <Filter className="w-4 h-4" />
+                    Show Filters
+                  </>
+                )}
+              </button>
             </div>
           </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="mt-4 p-6 bg-gray-900/50 rounded-lg border border-gray-700">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Filter className="w-5 h-5 text-red-500" />
+                Advanced Filters
+              </h3>
+
+              {/* Filter Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Name Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter Name"
+                    value={filters.name}
+                    onChange={(e) =>
+                      handleFilterInputChange("name", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Email Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Enter Email"
+                    value={filters.email}
+                    onChange={(e) =>
+                      handleFilterInputChange("email", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Mobile Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Mobile
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter Mobile"
+                    value={filters.mobile}
+                    onChange={(e) =>
+                      handleFilterInputChange("mobile", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Registration Number Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Registration Number/CPR
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter Number"
+                    value={filters.registrationNumber}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "registrationNumber",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Gender Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Gender
+                  </label>
+                  <select
+                    value={filters.gender}
+                    onChange={(e) =>
+                      handleFilterInputChange("gender", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {/* Vaccination Status Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Vaccination Status
+                  </label>
+                  <select
+                    value={filters.vaccinationStatus}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "vaccinationStatus",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Select Vaccination Status</option>
+                    <option value="Vaccinated">Vaccinated</option>
+                    <option value="Partially Vaccinated">
+                      Partially Vaccinated
+                    </option>
+                    <option value="Not Vaccinated">Not Vaccinated</option>
+                    <option value="Unknown">Unknown</option>
+                  </select>
+                </div>
+
+                {/* Membership Package Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Membership Package
+                  </label>
+                  <select
+                    value={filters.membershipPackage}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "membershipPackage",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    {packages.map((pkg) => (
+                      <option key={pkg._id} value={pkg.packageName}>
+                        {pkg.packageName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Membership Status Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Membership Status
+                  </label>
+                  <select
+                    value={filters.membershipStatus}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "membershipStatus",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Choose a value</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Suspended">Suspended</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+                </div>
+
+                {/* Membership Creation Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Membership Creation Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.membershipCreationDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "membershipCreationDateFrom",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Membership Creation Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Membership Creation Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.membershipCreationDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "membershipCreationDateTo",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Package Activation Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Package Activation Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.packageActivationDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "packageActivationDateFrom",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Package Activation Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Package Activation Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.packageActivationDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "packageActivationDateTo",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Package Payment Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Package Payment Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.packagePaymentDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "packagePaymentDateFrom",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Package Payment Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Package Payment Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.packagePaymentDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "packagePaymentDateTo",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Payment Due Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Payment Due Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.paymentDueDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "paymentDueDateFrom",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Payment Due Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Payment Due Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.paymentDueDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "paymentDueDateTo",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Package Expiry Date From */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Package Expiry Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.packageExpiryDateFrom}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "packageExpiryDateFrom",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Package Expiry Date To */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2">
+                    Package Expiry Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.packageExpiryDateTo}
+                    onChange={(e) =>
+                      handleFilterInputChange(
+                        "packageExpiryDateTo",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+
+              {/* Filter Actions */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleClearFilters}
+                  className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Clear All Filters
+                </button>
+                <div className="ml-auto text-sm text-gray-400 flex items-center">
+                  Showing {applyFilters(members).length} of {members.length}{" "}
+                  members
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Members Table */}
@@ -1534,10 +2167,12 @@ const Addmember = () => {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
               <p className="text-gray-400 mt-4">Loading members...</p>
             </div>
-          ) : members.length === 0 ? (
+          ) : applyFilters(members).length === 0 ? (
             <div className="p-8 text-center">
               <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No members found</p>
+              <p className="text-gray-400">
+                No members found matching the filters
+              </p>
             </div>
           ) : (
             <>
@@ -1569,7 +2204,7 @@ const Addmember = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-700">
-                    {members.map((member) => (
+                    {applyFilters(members).map((member) => (
                       <tr
                         key={member._id}
                         className="hover:bg-gray-700/30 transition-colors"
@@ -1622,10 +2257,10 @@ const Addmember = () => {
                               member.memberStatus === "Active"
                                 ? "bg-green-600/20 text-green-400 border border-green-600/30"
                                 : member.memberStatus === "Expired"
-                                ? "bg-orange-600/20 text-orange-400 border border-orange-600/30"
-                                : member.memberStatus === "Suspended"
-                                ? "bg-red-600/20 text-red-400 border border-red-600/30"
-                                : "bg-gray-600/20 text-gray-400 border border-gray-600/30"
+                                  ? "bg-orange-600/20 text-orange-400 border border-orange-600/30"
+                                  : member.memberStatus === "Suspended"
+                                    ? "bg-red-600/20 text-red-400 border border-red-600/30"
+                                    : "bg-gray-600/20 text-gray-400 border border-gray-600/30"
                             }`}
                           >
                             {member.memberStatus || "Inactive"}
@@ -1680,7 +2315,7 @@ const Addmember = () => {
                     <span className="font-semibold text-white">
                       {Math.min(
                         pagination.currentPage * membersPerPage,
-                        pagination.totalMembers
+                        pagination.totalMembers,
                       )}
                     </span>{" "}
                     of{" "}
@@ -1774,7 +2409,7 @@ const Addmember = () => {
                     <button
                       onClick={() =>
                         setCurrentPage((prev) =>
-                          Math.min(pagination.totalPages, prev + 1)
+                          Math.min(pagination.totalPages, prev + 1),
                         )
                       }
                       disabled={
@@ -1897,9 +2532,9 @@ const Addmember = () => {
                         selectedMember.vaccinationStatus === "Vaccinated"
                           ? "bg-green-600/20 text-green-400"
                           : selectedMember.vaccinationStatus ===
-                            "Partially Vaccinated"
-                          ? "bg-yellow-600/20 text-yellow-400"
-                          : "bg-gray-600/20 text-gray-400"
+                              "Partially Vaccinated"
+                            ? "bg-yellow-600/20 text-yellow-400"
+                            : "bg-gray-600/20 text-gray-400"
                       }`}
                     >
                       {selectedMember.vaccinationStatus}
@@ -1912,10 +2547,10 @@ const Addmember = () => {
                         selectedMember.memberStatus === "Active"
                           ? "bg-green-600/20 text-green-400 border border-green-600/30"
                           : selectedMember.memberStatus === "Expired"
-                          ? "bg-orange-600/20 text-orange-400 border border-orange-600/30"
-                          : selectedMember.memberStatus === "Suspended"
-                          ? "bg-red-600/20 text-red-400 border border-red-600/30"
-                          : "bg-gray-600/20 text-gray-400 border border-gray-600/30"
+                            ? "bg-orange-600/20 text-orange-400 border border-orange-600/30"
+                            : selectedMember.memberStatus === "Suspended"
+                              ? "bg-red-600/20 text-red-400 border border-red-600/30"
+                              : "bg-gray-600/20 text-gray-400 border border-gray-600/30"
                       }`}
                     >
                       {selectedMember.memberStatus || "Inactive"}
@@ -2101,7 +2736,7 @@ const Addmember = () => {
                       <p className="text-gray-400 text-sm mb-1">Start Date</p>
                       <p className="text-white">
                         {formatDateForDisplay(
-                          selectedMember.currentPackage.startDate
+                          selectedMember.currentPackage.startDate,
                         )}
                       </p>
                     </div>
@@ -2109,7 +2744,7 @@ const Addmember = () => {
                       <p className="text-gray-400 text-sm mb-1">End Date</p>
                       <p className="text-white">
                         {formatDateForDisplay(
-                          selectedMember.currentPackage.endDate
+                          selectedMember.currentPackage.endDate,
                         )}
                       </p>
                     </div>
@@ -2309,7 +2944,7 @@ const Addmember = () => {
                                           handleOpenEditStartDateModal(
                                             pkg._id,
                                             pkg.packageName,
-                                            pkg.startDate
+                                            pkg.startDate,
                                           )
                                         }
                                         className="text-blue-400 hover:text-blue-300 transition-colors ml-2"
@@ -2346,7 +2981,7 @@ const Addmember = () => {
                                   onClick={async () => {
                                     if (
                                       window.confirm(
-                                        "Mark this package as Expired? (For testing)"
+                                        "Mark this package as Expired? (For testing)",
                                       )
                                     ) {
                                       try {
@@ -2364,20 +2999,20 @@ const Addmember = () => {
                                               "Content-Type":
                                                 "application/json",
                                             },
-                                          }
+                                          },
                                         );
                                         const data = await response.json();
                                         if (data.success) {
                                           toast.success(
-                                            "Package marked as expired"
+                                            "Package marked as expired",
                                           );
                                           dispatch(
-                                            fetchMemberById(selectedMember._id)
+                                            fetchMemberById(selectedMember._id),
                                           );
                                         } else {
                                           toast.error(
                                             data.error ||
-                                              "Failed to expire package"
+                                              "Failed to expire package",
                                           );
                                         }
                                       } catch (error) {
@@ -2427,7 +3062,7 @@ const Addmember = () => {
                               (payment) =>
                                 payment.transactionId &&
                                 payment.transactionId !== "-" &&
-                                payment.transactionId.trim() !== ""
+                                payment.transactionId.trim() !== "",
                             ) && (
                               <th className="text-left py-3 px-4 text-gray-400 font-semibold text-sm">
                                 Transaction ID
@@ -2466,7 +3101,7 @@ const Addmember = () => {
                                   (p) =>
                                     p.transactionId &&
                                     p.transactionId !== "-" &&
-                                    p.transactionId.trim() !== ""
+                                    p.transactionId.trim() !== "",
                                 ) && (
                                   <td className="py-3 px-4 text-gray-400 text-sm">
                                     {payment.transactionId &&
@@ -2482,10 +3117,10 @@ const Addmember = () => {
                                       payment.status === "Success"
                                         ? "bg-green-600/20 text-green-400"
                                         : payment.status === "Pending"
-                                        ? "bg-yellow-600/20 text-yellow-400"
-                                        : payment.status === "Failed"
-                                        ? "bg-red-600/20 text-red-400"
-                                        : "bg-blue-600/20 text-blue-400"
+                                          ? "bg-yellow-600/20 text-yellow-400"
+                                          : payment.status === "Failed"
+                                            ? "bg-red-600/20 text-red-400"
+                                            : "bg-blue-600/20 text-blue-400"
                                     }`}
                                   >
                                     {payment.status}
@@ -2752,7 +3387,7 @@ const Addmember = () => {
                       {Math.max(
                         0,
                         (selectedMember.totalPending || 0) -
-                          (paymentEditData.amountPaid || 0)
+                          (paymentEditData.amountPaid || 0),
                       )}
                     </p>
                   </div>
@@ -2792,7 +3427,7 @@ const Addmember = () => {
                       const newTotalPending = Math.max(
                         0,
                         (selectedMember.totalPending || 0) -
-                          (paymentEditData.amountPaid || 0)
+                          (paymentEditData.amountPaid || 0),
                       );
 
                       const response = await fetch(
@@ -2810,7 +3445,7 @@ const Addmember = () => {
                             totalPaid: newTotalPaid,
                             totalPending: newTotalPending,
                           }),
-                        }
+                        },
                       );
 
                       const data = await response.json();
@@ -2822,7 +3457,7 @@ const Addmember = () => {
                           fetchAllMembers({
                             page: currentPage,
                             limit: membersPerPage,
-                          })
+                          }),
                         );
                         dispatch(fetchMemberById(selectedMember._id));
                       } else {
@@ -2914,7 +3549,7 @@ const Addmember = () => {
                     value={selectedRenewPackage?._id || ""}
                     onChange={(e) => {
                       const pkg = renewPackageList.find(
-                        (p) => p._id === e.target.value
+                        (p) => p._id === e.target.value,
                       );
                       setSelectedRenewPackage(pkg);
                     }}
@@ -2950,8 +3585,8 @@ const Addmember = () => {
                             selectedRenewPackage.packageStatus === "Active"
                               ? "bg-green-600/20 text-green-400"
                               : selectedRenewPackage.packageStatus === "Expired"
-                              ? "bg-red-600/20 text-red-400"
-                              : "bg-gray-600/20 text-gray-400"
+                                ? "bg-red-600/20 text-red-400"
+                                : "bg-gray-600/20 text-gray-400"
                           }`}
                         >
                           {selectedRenewPackage.packageStatus}
@@ -2960,13 +3595,13 @@ const Addmember = () => {
                       <p className="text-gray-300">
                         <span className="text-gray-400">Start Date:</span>{" "}
                         {new Date(
-                          selectedRenewPackage.startDate
+                          selectedRenewPackage.startDate,
                         ).toLocaleDateString("en-GB")}
                       </p>
                       <p className="text-gray-300">
                         <span className="text-gray-400">End Date:</span>{" "}
                         {new Date(
-                          selectedRenewPackage.endDate
+                          selectedRenewPackage.endDate,
                         ).toLocaleDateString("en-GB")}
                       </p>
                     </div>
@@ -2984,7 +3619,7 @@ const Addmember = () => {
                       // Check if package is still active
                       if (selectedRenewPackage.packageStatus === "Active") {
                         toast.error(
-                          "You can't renew an active package. Wait until it expires."
+                          "You can't renew an active package. Wait until it expires.",
                         );
                         return;
                       }
@@ -2997,7 +3632,7 @@ const Addmember = () => {
 
                       console.log(
                         "Selected Package for Renew:",
-                        selectedRenewPackage
+                        selectedRenewPackage,
                       );
 
                       if (selectedRenewPackage.packageId?.duration) {
@@ -3007,7 +3642,7 @@ const Addmember = () => {
                         const value = duration.value || 1;
 
                         console.log(
-                          `Duration from packageId: ${value} ${unit}`
+                          `Duration from packageId: ${value} ${unit}`,
                         );
 
                         // Convert to days based on unit
@@ -3022,14 +3657,14 @@ const Addmember = () => {
                         }
                       } else {
                         console.warn(
-                          "Package duration not found in packageId, checking packages list"
+                          "Package duration not found in packageId, checking packages list",
                         );
 
                         // Fallback: Try to find the package from the packages list
                         const fullPackage = packages.find(
                           (p) =>
                             p._id === selectedRenewPackage.packageId?._id ||
-                            p._id === selectedRenewPackage.packageId
+                            p._id === selectedRenewPackage.packageId,
                         );
 
                         if (fullPackage?.duration) {
@@ -3038,7 +3673,7 @@ const Addmember = () => {
                           const value = duration.value || 1;
 
                           console.log(
-                            `Duration from packages list: ${value} ${unit}`
+                            `Duration from packages list: ${value} ${unit}`,
                           );
 
                           if (unit === "days") {
@@ -3052,7 +3687,7 @@ const Addmember = () => {
                           }
                         } else {
                           console.warn(
-                            "Package duration not found, using default 30 days"
+                            "Package duration not found, using default 30 days",
                           );
                         }
                       }
@@ -3107,7 +3742,7 @@ const Addmember = () => {
                     <p className="text-gray-300">
                       <span className="text-gray-400">Previous End Date:</span>{" "}
                       {new Date(
-                        selectedRenewPackage.endDate
+                        selectedRenewPackage.endDate,
                       ).toLocaleDateString("en-GB")}
                     </p>
                   </div>
@@ -3132,7 +3767,7 @@ const Addmember = () => {
                             const start = new Date(startDate);
                             const end = new Date(start);
                             end.setDate(
-                              end.getDate() + renewFormData.durationInDays
+                              end.getDate() + renewFormData.durationInDays,
                             );
                             endDate = end.toISOString().split("T")[0];
                           }
@@ -3156,7 +3791,7 @@ const Addmember = () => {
                         value={
                           renewFormData.endDate
                             ? new Date(
-                                renewFormData.endDate
+                                renewFormData.endDate,
                               ).toLocaleDateString("en-GB")
                             : "Select start date first"
                         }
@@ -3377,14 +4012,14 @@ const Addmember = () => {
                               packageId: selectedRenewPackage._id,
                               renewData: renewFormData,
                             }),
-                          }
+                          },
                         );
 
                         const data = await response.json();
 
                         if (data.success) {
                           toast.success(
-                            "Package renewed successfully! Email sent with invoice."
+                            "Package renewed successfully! Email sent with invoice.",
                           );
                           setIsRenewModalOpen(false);
                           setSelectedRenewPackage(null);
@@ -3393,7 +4028,7 @@ const Addmember = () => {
                             fetchAllMembers({
                               page: currentPage,
                               limit: membersPerPage,
-                            })
+                            }),
                           );
                           dispatch(fetchMemberById(selectedMember._id));
                         } else {
@@ -3547,7 +4182,7 @@ const Addmember = () => {
                         maxDiscount:
                           discountType === "percentage"
                             ? Math.round(
-                                (pkg.savings / pkg.originalPrice) * 100
+                                (pkg.savings / pkg.originalPrice) * 100,
                               )
                             : pkg.savings || 0,
                         totalPaid: totalPaid,
@@ -3611,7 +4246,7 @@ const Addmember = () => {
                           value={selectedOldPackage?._id || ""}
                           onChange={(e) => {
                             const pkg = selectedMember.packages.find(
-                              (p) => p._id === e.target.value
+                              (p) => p._id === e.target.value,
                             );
                             setSelectedOldPackage(pkg || null);
                           }}
@@ -3686,7 +4321,7 @@ const Addmember = () => {
                               const start = new Date(startDate);
                               const end = new Date(start);
                               end.setDate(
-                                end.getDate() + upgradeFormData.durationInDays
+                                end.getDate() + upgradeFormData.durationInDays,
                               );
                               endDate = end.toISOString().split("T")[0];
                             }
@@ -3710,7 +4345,7 @@ const Addmember = () => {
                           value={
                             upgradeFormData.endDate
                               ? new Date(
-                                  upgradeFormData.endDate
+                                  upgradeFormData.endDate,
                                 ).toLocaleDateString("en-GB")
                               : "Select start date first"
                           }
@@ -3966,14 +4601,14 @@ const Addmember = () => {
                                   ? oldPackageAction
                                   : null,
                               }),
-                            }
+                            },
                           );
 
                           const data = await response.json();
 
                           if (data.success) {
                             toast.success(
-                              "Package added successfully! Email sent with invoice."
+                              "Package added successfully! Email sent with invoice.",
                             );
                             setIsUpgradeModalOpen(false);
                             setSelectedUpgradePackage(null);
@@ -3995,7 +4630,7 @@ const Addmember = () => {
                               fetchAllMembers({
                                 page: currentPage,
                                 limit: membersPerPage,
-                              })
+                              }),
                             );
                             dispatch(fetchMemberById(selectedMember._id));
                           } else {
@@ -4088,7 +4723,7 @@ const Addmember = () => {
                   const selectedPkgId = e.target.value;
                   if (selectedPkgId) {
                     const packageToFreeze = selectedMember.packages.find(
-                      (p) => p._id === selectedPkgId
+                      (p) => p._id === selectedPkgId,
                     );
                     if (packageToFreeze) {
                       const isFreezable =
@@ -4165,7 +4800,7 @@ const Addmember = () => {
                   const selectedPkgId = e.target.value;
                   if (selectedPkgId) {
                     const packageToExtend = selectedMember.packages.find(
-                      (p) => p._id === selectedPkgId
+                      (p) => p._id === selectedPkgId,
                     );
                     if (packageToExtend) {
                       setSelectedExtensionPackage(packageToExtend);
@@ -4253,7 +4888,7 @@ const Addmember = () => {
                         const end = new Date(freezeEndDate);
                         if (end >= start) {
                           const days = Math.ceil(
-                            (end - start) / (1000 * 60 * 60 * 24)
+                            (end - start) / (1000 * 60 * 60 * 24),
                           );
                           // Extension days = freeze period
                         }
@@ -4282,7 +4917,7 @@ const Addmember = () => {
                     Freeze Period:{" "}
                     {Math.ceil(
                       (new Date(freezeEndDate) - new Date(freezeStartDate)) /
-                        (1000 * 60 * 60 * 24)
+                        (1000 * 60 * 60 * 24),
                     )}{" "}
                     days
                   </p>
@@ -4290,11 +4925,11 @@ const Addmember = () => {
                     New End Date:{" "}
                     {(() => {
                       const currentEnd = new Date(
-                        selectedFreezePackage.endDate
+                        selectedFreezePackage.endDate,
                       );
                       const freezeDays = Math.ceil(
                         (new Date(freezeEndDate) - new Date(freezeStartDate)) /
-                          (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24),
                       );
                       currentEnd.setDate(currentEnd.getDate() + freezeDays);
                       return formatDateForDisplay(currentEnd);
@@ -4320,7 +4955,7 @@ const Addmember = () => {
                     }
 
                     const freezeDays = Math.ceil(
-                      (end - start) / (1000 * 60 * 60 * 24)
+                      (end - start) / (1000 * 60 * 60 * 24),
                     );
 
                     setIsFreezing(true);
@@ -4341,14 +4976,14 @@ const Addmember = () => {
                             freezeEndDate: freezeEndDate,
                             freezeDays: freezeDays,
                           }),
-                        }
+                        },
                       );
 
                       const data = await response.json();
 
                       if (data.success) {
                         toast.success(
-                          `Package frozen for ${freezeDays} days. End date extended.`
+                          `Package frozen for ${freezeDays} days. End date extended.`,
                         );
                         setIsFreezeModalOpen(false);
                         setSelectedFreezePackage(null);
@@ -4359,7 +4994,7 @@ const Addmember = () => {
                           fetchAllMembers({
                             page: currentPage,
                             limit: membersPerPage,
-                          })
+                          }),
                         );
                       } else {
                         toast.error(data.error || "Failed to freeze package");
@@ -4446,10 +5081,10 @@ const Addmember = () => {
                     New End Date:{" "}
                     {(() => {
                       const currentEnd = new Date(
-                        selectedExtensionPackage.endDate
+                        selectedExtensionPackage.endDate,
                       );
                       currentEnd.setDate(
-                        currentEnd.getDate() + parseInt(extensionDays)
+                        currentEnd.getDate() + parseInt(extensionDays),
                       );
                       return formatDateForDisplay(currentEnd);
                     })()}
@@ -4512,7 +5147,7 @@ const Addmember = () => {
                         {Math.max(
                           0,
                           parseFloat(extensionAmount) -
-                            parseFloat(extensionPaid)
+                            parseFloat(extensionPaid),
                         )}
                       </p>
                     </div>
@@ -4565,14 +5200,14 @@ const Addmember = () => {
                               ? parseFloat(extensionPaid)
                               : 0,
                           }),
-                        }
+                        },
                       );
 
                       const data = await response.json();
 
                       if (data.success) {
                         toast.success(
-                          `Package extended by ${extensionDays} days successfully!`
+                          `Package extended by ${extensionDays} days successfully!`,
                         );
                         setIsExtensionModalOpen(false);
                         setSelectedExtensionPackage(null);
@@ -4585,7 +5220,7 @@ const Addmember = () => {
                           fetchAllMembers({
                             page: currentPage,
                             limit: membersPerPage,
-                          })
+                          }),
                         );
                       } else {
                         toast.error(data.error || "Failed to extend package");
@@ -4698,8 +5333,8 @@ const Addmember = () => {
                           step < currentStep
                             ? "bg-white text-red-600"
                             : step === currentStep
-                            ? "bg-white text-red-600 ring-4 ring-white/30"
-                            : "bg-white/30 text-white/60"
+                              ? "bg-white text-red-600 ring-4 ring-white/30"
+                              : "bg-white/30 text-white/60"
                         }`}
                       >
                         {step}
@@ -4712,8 +5347,8 @@ const Addmember = () => {
                         {step === 1
                           ? "Basic Info"
                           : step === 2
-                          ? "Package & Payment"
-                          : "Trainer"}
+                            ? "Package & Payment"
+                            : "Trainer"}
                       </span>
                     </div>
                   ))}
@@ -5143,8 +5778,8 @@ const Addmember = () => {
                                       pkg.paymentStatus === "Paid"
                                         ? "text-green-400"
                                         : pkg.paymentStatus === "Pending"
-                                        ? "text-yellow-400"
-                                        : "text-blue-400"
+                                          ? "text-yellow-400"
+                                          : "text-blue-400"
                                     }`}
                                   >
                                     {pkg.paymentStatus}
@@ -5198,7 +5833,7 @@ const Addmember = () => {
                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                         style={{
                           backgroundImage: `url("data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-                            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10L12 15L17 10H7Z" fill="white"/></svg>'
+                            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10L12 15L17 10H7Z" fill="white"/></svg>',
                           )}")`,
                           backgroundRepeat: "no-repeat",
                           backgroundPosition: "right 12px center",
@@ -5215,7 +5850,7 @@ const Addmember = () => {
                             .filter(
                               (pkg) =>
                                 !packageTypeFilter ||
-                                pkg.packageType === packageTypeFilter
+                                pkg.packageType === packageTypeFilter,
                             )
                             .map((pkg) => (
                               <option key={pkg._id} value={pkg._id}>
@@ -5227,7 +5862,7 @@ const Addmember = () => {
                         <p className="text-xs text-gray-400 mt-1">
                           Showing{" "}
                           {packages?.filter(
-                            (pkg) => pkg.packageType === packageTypeFilter
+                            (pkg) => pkg.packageType === packageTypeFilter,
                           ).length || 0}{" "}
                           {packageTypeFilter} packages
                         </p>
@@ -5520,10 +6155,10 @@ const Addmember = () => {
                     {isUploading
                       ? "Uploading Files..."
                       : isLoading
-                      ? "Processing..."
-                      : editMode
-                      ? "✓ Update Member"
-                      : "✓ Add Member"}
+                        ? "Processing..."
+                        : editMode
+                          ? "✓ Update Member"
+                          : "✓ Add Member"}
                   </button>
                 )}
               </div>
@@ -5656,26 +6291,26 @@ const Addmember = () => {
                             member,
                             "Full Name",
                             "fullName",
-                            "Name"
+                            "Name",
                           );
                           const phone = getExcelFieldValue(
                             member,
                             "Phone Number",
                             "phoneNumber",
-                            "Phone"
+                            "Phone",
                           );
                           const packageName = getExcelFieldValue(
                             member,
                             "Package Name",
                             "packageName",
-                            "Package"
+                            "Package",
                           );
                           const startDate = getExcelFieldValue(
                             member,
                             "package start date",
                             "packageStartDate",
                             "Start Date",
-                            "startDate"
+                            "startDate",
                           );
 
                           return (
@@ -5818,12 +6453,12 @@ const Addmember = () => {
                                           </span>
                                           <span>{warning}</span>
                                         </li>
-                                      )
+                                      ),
                                     )}
                                   </ul>
                                 )}
                             </div>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
@@ -5866,7 +6501,7 @@ const Addmember = () => {
                                             </span>
                                             <span>{warning}</span>
                                           </li>
-                                        )
+                                        ),
                                       )}
                                     </ul>
                                   )}
