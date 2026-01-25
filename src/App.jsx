@@ -27,6 +27,7 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import TrainerLayout from "./components/trainer/layout";
 import TrainerDashboard from "./pages/trainer/dashboard";
 import PaymentHistory from "./pages/admin/paymenthistory";
+import GroupsPage from "./pages/admin/groups";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { verifySession } from "./store/auth/auth-slice";
@@ -43,7 +44,6 @@ const AppContent = () => {
       if (user) {
         const parsedUser = JSON.parse(user);
         if (parsedUser && parsedUser._id) {
-          console.log("🔄 Verifying session on app mount...");
           dispatch(verifySession()).catch((err) => {
             console.error("Session verification failed on mount:", err);
           });
@@ -93,6 +93,7 @@ const AppContent = () => {
           <Route path="addemployee" element={<AddEmployee />} />
           <Route path="addpackages" element={<AddPackages />} />
           <Route path="paymenthistory" element={<PaymentHistory />} />
+          <Route path="groups" element={<GroupsPage />} />
 
           <Route path="settings" element={<Layoutsettings />}>
             <Route

@@ -76,14 +76,32 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Revenue");
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
-  const [dateRange, setDateRange] = useState({
-    start: "2025-12-01",
-    end: "2025-12-31",
-  });
-  const [tempDateRange, setTempDateRange] = useState({
-    start: "2025-12-01",
-    end: "2025-12-31",
-  });
+
+  // Get current month's start and end dates
+  const getCurrentMonthDates = () => {
+    const today = new Date();
+
+    // First day of the current month
+    const startOfMonth = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1,
+      12,
+      0,
+      0,
+    );
+
+    // Current date (today)
+    const endOfMonth = new Date(today);
+
+    return {
+      start: startOfMonth.toISOString().split("T")[0],
+      end: endOfMonth.toISOString().split("T")[0],
+    };
+  };
+
+  const [dateRange, setDateRange] = useState(getCurrentMonthDates());
+  const [tempDateRange, setTempDateRange] = useState(getCurrentMonthDates());
 
   useEffect(() => {
     fetchDashboardStats();
@@ -97,16 +115,16 @@ const AdminDashboard = () => {
       console.log("📊 Fetching dashboard statistics...");
       const apiBase =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-      const response = await axios.get(`${apiBase}/api/admin/dashboard/stats`, {
-        withCredentials: true,
-      });
-      console.log("Dashboard stats response:", response.data);
+      const response = await axios.get(
+        `${apiBase}/api/admin/dashboard/stats?start=${dateRange.start}&end=${dateRange.end}`,
+        {
+          withCredentials: true,
+        },
+      );
       if (response.data.success) {
         setDashboardStats(response.data.statistics);
-        console.log("Dashboard stats set:", response.data.statistics);
       }
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
       console.error("Error details:", error.response?.data || error.message);
       toast.error(
         error.response?.data?.error ||

@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   IndianRupee,
+  Users2,
 } from "lucide-react";
 import logo from "../../assets/flogo.jpg";
 import { Link, useLocation } from "react-router-dom";
@@ -81,6 +82,13 @@ const AdminSidebar = () => {
       roles: ["admin"], // Admin only
     },
     {
+      path: "/admin/groups",
+      icon: Users2,
+      label: "Groups",
+      description: "Create and manage member groups",
+      roles: ["admin"], // Admin only
+    },
+    {
       path: "/admin/files",
       icon: FileCheck,
       label: "Files",
@@ -105,7 +113,7 @@ const AdminSidebar = () => {
 
   // Filter menu items based on user role
   const menuItems = allMenuItems.filter((item) =>
-    item.roles.includes(user?.role)
+    item.roles.includes(user?.role),
   );
 
   return (
