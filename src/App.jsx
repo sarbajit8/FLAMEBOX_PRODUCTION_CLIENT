@@ -17,6 +17,7 @@ import GymScheduleManagement from "./pages/admin/setopening";
 import Layoutsettings from "./components/admin/layout2";
 import AddEmployee from "./pages/admin/addemployee";
 import AddPackages from "./pages/admin/addpackages";
+import Tasks from "./pages/admin/tasks";
 import AdminLogin from "./pages/auth/adminlLogin";
 import AdminAuthLayout from "./components/auth/adminAuthLayout";
 import RoleBasedLogin from "./pages/auth/RoleBasedLogin";
@@ -87,6 +88,7 @@ const AppContent = () => {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="tasks" element={<Tasks />} />
           <Route path="addmember" element={<Addmember />} />
           <Route path="addleads" element={<GymLeadsTracking />} />
           <Route path="addattendance" element={<GymAttendance />} />

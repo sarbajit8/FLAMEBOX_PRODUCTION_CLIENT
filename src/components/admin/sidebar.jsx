@@ -13,6 +13,7 @@ import {
   X,
   IndianRupee,
   Users2,
+  CheckSquare,
 } from "lucide-react";
 import logo from "../../assets/flogo.jpg";
 import { Link, useLocation } from "react-router-dom";
@@ -32,6 +33,13 @@ const AdminSidebar = () => {
       label: "Dashboard",
       description: "View gym statistics and overview",
       roles: ["admin", "trainer"],
+    },
+    {
+      path: "/admin/tasks",
+      icon: CheckSquare,
+      label: "Tasks",
+      description: "Manage birthdays, renewals, and follow-ups",
+      roles: ["admin"],
     },
     {
       path: "/admin/addmember",

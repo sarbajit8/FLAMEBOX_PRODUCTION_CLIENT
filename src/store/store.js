@@ -5,15 +5,17 @@ import employeeAuthReducer from "./admin/employeelogin-slice";
 import packagesReducer from "./admin/packages-slice";
 import membersReducer from "./admin/members-slice";
 import leadsReducer from "./admin/leads-slice"; // Add this import
+import tasksReducer from "./admin/taskSlice";
 
 const store = configureStore({
   reducer: {
-    auth: authReducer,                 // Admin authentication
-    employee: employeeReducer,         // Employee CRUD operations
+    auth: authReducer, // Admin authentication
+    employee: employeeReducer, // Employee CRUD operations
     employeeAuth: employeeAuthReducer, // Employee authentication
-    packages: packagesReducer,         // Packages CRUD operations
-    members: membersReducer,           // Members CRUD operations
-    leads: leadsReducer,               // Leads CRUD operations - ADD THIS LINE
+    packages: packagesReducer, // Packages CRUD operations
+    members: membersReducer, // Members CRUD operations
+    leads: leadsReducer, // Leads CRUD operations - ADD THIS LINE
+    tasks: tasksReducer, // Tasks management
   },
 });
 
